@@ -1,0 +1,26 @@
+# Raw project data (do not upload)
+ARMASdatasets_COMPLETE-*/
+
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.deps/
+.venv/
+venv/
+
+# Temporary render/build files
+tmp/
+
+# Generated experiment artifacts and packaged exports
+output/
+outputs/
+overleaf_upload/
+overleaf_upload.zip
+*.pt
+*.pdf
+
+# Local secrets
+.env
+.env.*
+!.env.example
+

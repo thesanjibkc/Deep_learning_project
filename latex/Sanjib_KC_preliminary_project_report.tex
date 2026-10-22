@@ -1,0 +1,219 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+\usepackage[letterpaper,left=0.62in,right=0.62in,top=0.68in,bottom=0.72in]{geometry}
+\usepackage{amsmath,booktabs,graphicx,microtype,times,url}
+\graphicspath{{../outputs/proposal_models_5m/}{../outputs/armas_5m_full_study/}}
+\setlength{\columnsep}{0.23in}
+\title{Physics-Guided Temporal Transformer for Aviation\\Effective Dose-Rate Estimation}
+\author{Sanjib K C\\Department of Physics and Astronomy, Georgia State University\\
+\texttt{[add email]} \quad PantherID: \texttt{[add PantherID]}}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This preliminary study executes the model family specified in the project
+proposal. The 5-minute ARMAS data contain 92,415 observations in three
+flight-separated partitions, 35 environmental variables over 12 time steps,
+and eight current flight/geomagnetic variables. P1 fits preprocessing and
+neural weights, P2 is the validation set, and P3 is the final test set. This
+completed preliminary assignment is denoted 123.
+Six PyTorch experiments compare a 43-input joint multilayer perceptron (JMLP),
+a CNN--MLP, a direct Transformer, and physics-guided residual Transformers.
+P2 validation selects the JMLP overall; on P3 it reaches RMSE 3.778 versus
+3.990 $\mu$Sv/h for NAIRAS V3. A residual Transformer trained with high-dose
+weight four gives the best RMSE above 15 $\mu$Sv/h, 5.650 versus 6.503 for
+NAIRAS. Thus current inputs remain a strong selection choice, while
+imbalance-aware residual attention benefits the safety-relevant upper tail.
+\end{abstract}
+
+\section{Introduction}
+ARMAS supplies in-flight measurements of aviation effective dose rate, whereas
+NAIRAS V3 supplies a physics-based estimate \cite{tobiska2016,mertens2013}.
+Prior static learning reduced error, especially when NAIRAS underpredicts large
+ARMAS observations \cite{sadykov2026,kc2025}. This study asks whether the
+preceding 55 minutes add information, which variables and lags drive a
+correction, and whether high-dose weighting improves accuracy above
+15 $\mu$Sv/h without unacceptable degradation elsewhere.
+
+The physics-guided target is
+\begin{equation}
+r_i=A_i-N_i,\qquad \hat A_i=N_i+f_\theta(X_i,N_i),
+\end{equation}
+where $A_i$ is ARMAS and $N_i$ is NAIRAS V3. The model corrects a physical
+estimate rather than learning dose rate entirely from scratch.
+
+\section{Related Work}
+Tobiska et al. introduced ARMAS for global, real-time aviation radiation
+monitoring \cite{tobiska2016}. Mertens et al. developed and validated NAIRAS as
+a physics-based aircraft dose model \cite{mertens2013}. The machine-learning-ready
+dataset aligns ARMAS and NAIRAS with aircraft position, neutron-monitor data,
+solar-wind variables, particle fluxes, and geomagnetic indices
+\cite{sadykov2026}.
+
+Earlier static machine learning showed that geospace properties can improve
+aviation-radiation nowcasts relative to uncorrected NAIRAS \cite{kc2025}. This
+project extends that work by testing the preceding hour with self-attention,
+following the Transformer framework of Vaswani et al. \cite{vaswani2017}.
+
+\section{Model and Method}
+\subsection{Data and Leakage Control}
+Each record contains a $12\times35$ temporal tensor and eight static variables.
+Source arrays place the current value at index zero; each array is reversed once
+to chronological order from $t-55$ to $t$ minutes. Vehicle ID is excluded.
+Median imputation and standardization use P1 statistics only. The preliminary
+assignment is 123, where the digits give the train--validation--test order. All
+P1 records supply optimization, P2 controls early stopping and model selection,
+and P3 is scored only after checkpoint selection is complete.
+
+\begin{table}[t]
+\centering
+\caption{Partition sizes for P1 train, P2 validation, and P3 test.}
+\begin{tabular}{lrrr}\toprule
+Partition & Rows & $A_i>15$ & Percent \\ \midrule
+P1 & 32,369 & 5,324 & 16.4 \\
+P2 & 30,752 & 4,983 & 16.2 \\
+P3 & 29,294 & 4,947 & 16.9 \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering\includegraphics[width=\columnwidth]{figure01_target_distribution.png}
+\caption{ARMAS target distribution using the full P1+P2+P3 dataset.}
+\end{figure}
+
+\subsection{Deep-Learning Models}
+The JMLP concatenates eight static and 35 current environmental inputs, then
+uses 128- and 64-unit GELU layers with normalization and dropout. The hybrid
+CNN--MLP applies two one-dimensional convolutions over the history and joins
+the pooled temporal representation to a current-input branch.
+
+The Transformer projects each 35-variable step to 48 dimensions, adds
+sinusoidal positional encoding and a learned summary token, and applies two
+four-head pre-normalized encoder blocks. A separate MLP embeds current inputs.
+Direct models predict standardized ARMAS; residual models also receive NAIRAS
+and predict standardized $A_i-N_i$.
+
+All networks use AdamW, cosine learning-rate decay, Huber loss, gradient
+clipping at 1.0, batch size 512, at most 24 epochs, and patience five.
+High-dose residual variants multiply losses above 15 $\mu$Sv/h by two or four.
+
+\begin{table}[t]
+\centering\small
+\caption{Executed architectures and trainable parameter counts.}
+\begin{tabular}{lrr}\toprule
+Model & Parameters & Epochs \\ \midrule
+JMLP & 14,209 & 11 \\
+CNN--MLP & 30,401 & 13 \\
+Direct Transformer & 61,345 & 11 \\
+Residual Transformer & 61,441 & 8 \\
+Residual Transformer $w=2$ & 61,441 & 10 \\
+Residual Transformer $w=4$ & 61,441 & 9 \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering\includegraphics[width=\columnwidth]{02_learning_curves.png}
+\caption{P2 validation loss used for early stopping and checkpoint selection.}
+\end{figure}
+
+\section{Experiments and Results}
+\subsection{Evaluation Protocol}
+We report MAE, RMSE, coefficient of determination, and bias overall and for
+$A_i\leq15$ and $A_i>15$ $\mu$Sv/h. The central comparison is NAIRAS V3,
+JMLP, CNN--MLP, direct Transformer, residual Transformer, and two
+imbalance-aware residual Transformers. Group occlusion replaces one
+standardized temporal variable or complete lag with its P1 mean and measures
+the P2 RMSE change. Occlusion measures model dependence rather than causality.
+
+\subsection{P3 Test Results}
+\begin{table}[t]
+\centering\small
+\caption{P3 test results. RMSE is in $\mu$Sv/h; lower is better.}
+\begin{tabular}{lrrr}\toprule
+Model & All & $A_i>15$ & $R^2$ \\ \midrule
+NAIRAS V3 & 3.990 & 6.503 & .449 \\
+JMLP & 3.778 & 6.571 & .506 \\
+CNN--MLP & 4.239 & 7.076 & .378 \\
+Direct Transformer & 3.889 & 6.874 & .477 \\
+Residual Transformer & 3.811 & 6.602 & .497 \\
+Residual Transformer $w=2$ & \textbf{3.712} & 6.086 & \textbf{.523} \\
+Residual Transformer $w=4$ & 3.822 & \textbf{5.650} & .495 \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering\includegraphics[width=\columnwidth]{01_proposal_model_rmse.png}
+\caption{Overall and high-dose P3 test RMSE. Ranking changes when the upper tail is emphasized.}
+\end{figure}
+
+P2 validation selects the JMLP overall. On P3 it reaches RMSE 3.778, MAE 2.793,
+and $R^2=0.506$, a 5.3\% RMSE reduction from NAIRAS. The weight-two residual
+Transformer has the lowest descriptive P3 RMSE (3.712), but this test-set
+ranking is not used to revise selection. The CNN--MLP is weaker than NAIRAS.
+
+The upper tail supports the imbalance-aware hypothesis. Increasing the
+residual loss weight from one to four reduces high-dose RMSE from 6.602 to
+5.650 and high-dose bias from $-5.064$ to $-3.513$ $\mu$Sv/h. Overall RMSE
+increases only from 3.811 to 3.822. The operational objective therefore changes
+which model should be selected.
+
+\begin{figure}[t]
+\centering\includegraphics[width=\columnwidth]{03_best_observed_vs_predicted.png}
+\caption{Observed versus predicted P3 dose rate for the model selected on P2.}
+\end{figure}
+
+\subsection{Temporal Interpretation}
+Feature-group occlusion gives the largest RMSE increases for the Newark
+neutron monitor (0.030), Oulu neutron monitor (0.025), Thule neutron monitor
+(0.011), and solar F10.7 flux (0.009 $\mu$Sv/h). No lag occlusion increases
+RMSE; the least negative change is at the current observation. Small and negative lag effects indicate strong
+temporal redundancy and help explain why attention does not dominate the JMLP.
+
+\begin{figure}[t]
+\centering\includegraphics[width=\columnwidth]{04_transformer_occlusion.png}
+\caption{Residual-Transformer variable and lag occlusion. Positive values indicate worse RMSE after removal.}
+\end{figure}
+
+\section{Conclusions}
+The study supports learned correction of a physics model, but temporal
+complexity is not automatically useful. The 32,369-row training partition may
+also be small for a 61,000-parameter attention model, while closely spaced
+environmental variables are highly redundant. The weighted residual
+Transformer is valuable when high-dose underprediction is the stated objective.
+
+These are single-seed, single-split preliminary results. Measurements within
+flights may be correlated, P3 includes 4,947 high-dose cases, and occlusion can
+be distorted by correlated inputs. CPU constraints motivated compact
+architectures. P3 results must not be used for further tuning.
+
+\section{Future Work}
+The completed preliminary analysis reports assignment 123: P1 train, P2
+validation, and P3 test. The future robustness study will use the five remaining
+train--validation--test permutations: 132, 213, 231, 312, and 321. Every
+rotation will fit preprocessing and model weights only on its training
+partition, select configurations on its validation partition, and evaluate its
+test partition only after selection. JMLP, direct Transformer, residual
+Transformer, and weighted residual Transformer will be repeated with at least
+three seeds. Integrated gradients and attention diagnostics will complement
+grouped occlusion, with interpretations reported as associations.
+
+\section{Reproducibility}
+The executed script \texttt{armas\_proposal\_models\_5m.py} saves checkpoints,
+per-epoch histories, predictions, metrics, plots, parameter counts, occlusion
+tables, and a JSON run manifest. Random seed 42 and the PyTorch version are
+recorded. Repository: \url{[insert-public-repository-URL-before-submission]}.
+
+\section{Peer Evaluation}
+This is an individual project. All data preparation, implementation,
+experiments, analysis, visualization, and report writing are assigned to
+Sanjib K C; therefore, there are no team peers to evaluate.
+
+\clearpage
+\begin{thebibliography}{9}
+\bibitem{tobiska2016} W. K. Tobiska et al., ``Global real-time dose measurements using the Automated Radiation Measurements for Aerospace Safety system,'' \emph{Space Weather}, 14, 1053--1080, 2016.
+\bibitem{mertens2013} C. J. Mertens et al., ``NAIRAS aircraft radiation model development, dose climatology, and initial validation,'' \emph{Space Weather}, 11, 603--635, 2013.
+\bibitem{sadykov2026} V. M. Sadykov et al., ``Machine Learning-Ready Data Sets for the Analysis and Nowcasting of Atmospheric Radiation at Aviation Altitudes,'' arXiv:2602.07108, 2026.
+\bibitem{kc2025} S. K C, V. M. Sadykov, and D. Kempton, ``Nowcasting of Aviation Radiation Using Geospace Environment Properties: A Machine Learning Approach,'' arXiv:2511.15746, 2025.
+\bibitem{vaswani2017} A. Vaswani et al., ``Attention Is All You Need,'' \emph{NeurIPS}, 2017.
+\end{thebibliography}
+\end{document}
