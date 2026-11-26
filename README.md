@@ -52,7 +52,9 @@ in all 6 rotations; residual beats direct; 1 h vs 24 h shows no difference; the 
 Transformer matches the MLP overall while cutting high-dose RMSE by 0.78 µSv/h.
 
 **Interactive:** [Flight Dose Lab](https://claude.ai/artifact/X3saE5EHSytJkidqedoo52) ·
-[Watching Attention Learn](https://claude.ai/artifact/SoxLwXhTsnEeFPNjU8EjjC) (private links; share from the page).
+[Watching Attention Learn](https://claude.ai/artifact/SoxLwXhTsnEeFPNjU8EjjC) ·
+[Flight Model Zoo](https://claude.ai/artifact/XTzA1TvvKFi7pJ45pAKZ9B) (runs the trained networks live; private links, share from each page).
+Next steps and open items: [`notes/next_steps.md`](notes/next_steps.md).
 
 ## Data
 

@@ -38,3 +38,6 @@ results/**/pred_*.npy
 
 # Office lock files
 ~$*
+
+# Local tool settings
+.claude/

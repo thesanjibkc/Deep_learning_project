@@ -457,5 +457,7 @@ picture(s, PFIG / "qr_repo.png", 10.85, 5.45, w=1.4)
 text(s, 10.4, 5.0, 2.3, 0.3, "Code on GitHub", size=12, color="D6DCE6", align=PP_ALIGN.CENTER)
 s.notes_slide.notes_text_frame.text = "Close with the one-sentence answer to the reviewer: deep learning wins on high doses and shows storm timing."
 
+from deck_qr import add_zoo_qr
+add_zoo_qr(prs)
 prs.save(OUT)
 print("saved", OUT, len(prs.slides), "slides")

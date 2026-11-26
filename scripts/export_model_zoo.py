@@ -1,4 +1,4 @@
-"""Export real model behaviour on one unseen flight for the interactive Model Zoo page.
+"""Export real model behaviour on one unseen flight, plus the trained weights, for the Model Zoo page.
 
 Flight: the G-IV flight on 9 Sept 2017 that contains the storm observation (06:24 UTC).
 Split: rotation 231 (train P2, validate P3, test P1), seed 42, so every model is shown on a flight
@@ -7,9 +7,9 @@ it never saw. Models: NAIRAS, MLP, Flat MLP, CNN-MLP, TCN, Transformer, Transfor
 
 Writes poster/zoo/zoo_data.json with
   line      downsampled timeline: measured, NAIRAS and every model's prediction along the flight
-  snaps     ~16 snapshots with each model's real internals (activations, attention weights)
-  whatif    each network's prediction for the storm snapshot when (a) the storm in the past is scaled
-            and (b) the model may only look back k hours
+  snaps     ~17 snapshots with the standardized inputs each network receives
+  weights   every trained parameter of the six networks, so the page can run them live in JavaScript
+  sc        the scaler statistics needed to standardize edited inputs
 """
 import json
 import sys
@@ -137,48 +137,16 @@ SHOW_LABEL = ["Neutron monitor", "Kp", "Dst", "Solar wind Bz", "Solar wind speed
 sj = [env.index(v) for v in SHOW]
 
 
-def trf_heads(model, z, xc):
-    """Per-head attention of the summary token for both layers: (layers, heads, T)."""
-    with torch.no_grad():
-        zz = f32(z)[None]
-        h = torch.cat([model.summary.expand(1, -1, -1), model.embed(zz)], 1) + model.pos
-        out = []
-        for blk in model.blocks:
-            x = blk.n1(h)
-            a, w = blk.attn(x, x, x, need_weights=True, average_attn_weights=False)   # (1, heads, T+1, T+1)
-            out.append(w[0, :, 0, 1:].numpy())
-            h = h + blk.drop(a); h = h + blk.drop(blk.ff(blk.n2(h)))
-    return np.stack(out)
+def pack(model):
+    return {n: {"s": list(t.shape), "d": np.round(t.detach().cpu().numpy().astype(np.float32), 5).ravel().tolist()}
+            for n, t in model.state_dict().items()}
 
 
-def internals(key, gi):
-    z, xc, xbb, n = Z[gi], Xc[gi], Xb[gi], float(N_ALL[gi])
-    zz, xcc = f32(z)[None], f32(xc)[None]
-    with torch.no_grad():
-        if key == "mlp":
-            n0, n3 = net[key].net[0], net[key].net[3]
-            h1 = torch.relu(n0(f32(xbb)[None])); h2 = torch.relu(n3(h1))
-            return {"h1": r2(h1[0]), "h2": r2(h2[0])}
-        if key == "flat":
-            net_ = net[key].net
-            xin = torch.cat([zz.flatten(1), xcc], 1)
-            W = net_[0].weight[:, : T * V].reshape(-1, T, V)
-            contrib = (W * zz[0][None]).abs().sum((0, 2)).numpy()
-            h1 = torch.relu(net_[0](xin))
-            return {"hour": r2(contrib / contrib.sum()), "h1": r2(h1[0])}
-        if key == "cnn":
-            c1 = net[key].conv[1](net[key].conv[0](zz.transpose(1, 2)))
-            c2 = net[key].conv[4](net[key].conv[3](net[key].conv[2](c1)))
-            return {"c2": [r2(row) for row in c2[0].numpy()]}
-        if key == "tcn":
-            mdl = net[key]; h = mdl.inp(zz.transpose(1, 2)); rows = [r2(h[0].abs().mean(0))]
-            for blk in mdl.blocks:
-                h = blk(h); rows.append(r2(h[0].mean(0)))
-            return {"layers": rows, "dil": [1, 2, 4, 8]}
-        hd = trf_heads(net[key], z, xc)
-        return {"att": [[r2(hh) for hh in layer] for layer in hd]}
-
-
+WEIGHTS = {k: pack(net[k]) for k in KEYS}
+rr = lambda a: np.round(np.asarray(a, dtype=np.float64).ravel(), 5).tolist()
+SCALERS = {"seq_mu": rr(s_seq.mu), "seq_sd": rr(s_seq.sd), "cur_mu": rr(s_cur.mu), "cur_sd": rr(s_cur.sd),
+           "b_mu": rr(s_b.mu), "b_sd": rr(s_b.sd), "ymu": round(mu, 5), "ysd": round(sd, 5)}
+fam = [env.index(n) for n in env if n.startswith(("Index_", "SW_"))]
 snaps = []
 for si in snap_idx:
     gi = fl[si]
@@ -186,27 +154,10 @@ for si in snap_idx:
         "i": int(si), "t": float(line["t"][si]), "A": line["A"][si], "N": line["N"][si],
         "alt": line["alt"][si], "rc": line["rc"][si],
         "lat": round(float(d["static"][gi, 0]), 1), "lon": round(float(d["static"][gi, 1]), 1),
-        "z": [r2(Z[gi, :, j]) for j in sj], "kp": r2(d["temporal"][gi, :, env.index("Index_Kp")] / 10),
-        "preds": {k: line["preds"][k][si] for k in KEYS},
-        "int": {k: internals(k, gi) for k in KEYS}})
+        # standardized model inputs, so the page can run the networks itself
+        "zs": np.round(Z[gi], 4).tolist(), "xc": np.round(Xc[gi], 4).tolist(), "xb": np.round(Xb[gi], 4).tolist(),
+        "preds": {k: line["preds"][k][si] for k in KEYS}})
 storm_snap = int(np.where(snap_idx == storm_sel)[0][0])
-
-# ---- what-if grid on the storm observation
-gi = flight[storm_pos]
-S_VALUES = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5]; K_VALUES = [1, 2, 3, 6, 9, 12, 18, 24]
-fam = [env.index(n) for n in env if n.startswith(("Index_", "SW_"))]
-grid = {k: [[0.0] * len(K_VALUES) for _ in S_VALUES] for k in KEYS}
-for a, s in enumerate(S_VALUES):
-    for b, kk in enumerate(K_VALUES):
-        z = Z[gi].copy()
-        z[:, fam] = z[-1, fam] + s * (z[:, fam] - z[-1, fam])         # scale how far the past differs from now
-        if kk < T:
-            z[: T - kk, :] = z[T - kk, :]                              # cannot see beyond k hours back
-        for key in KEYS:
-            grid[key][a][b] = round(float(run(key, z[None], Xc[gi][None], Xb[gi][None], N_ALL[gi:gi + 1])[0]), 2)
-actual = {k: round(float(run(k, Z[gi][None], Xc[gi][None], Xb[gi][None], N_ALL[gi:gi + 1])[0]), 2) for k in KEYS}
-print("storm obs: A", A_ALL[gi], "N", N_ALL[gi], "model preds", actual)
-print("trf at s=0,k=24 / s=1,k=24 / s=1,k=1:", grid["trf"][0][-1], grid["trf"][4][-1], grid["trf"][4][0])
 
 out = {
     "meta": {"aircraft": str(veh[storm_i]).replace("*", ""), "start": str(t0)[:16] + " UTC", "minutes": round(float(minutes[-1])),
@@ -220,9 +171,8 @@ out = {
                {"key": "trf", "label": "Transformer", "params": params["trf"]},
                {"key": "trfw", "label": "Transformer, high-dose weight", "params": params["trfw"]}],
     "vars": SHOW_LABEL, "line": line, "flight_rmse": {k: round(v, 3) for k, v in rmse.items()},
-    "snaps": snaps, "storm_snap": storm_snap,
-    "whatif": {"s": S_VALUES, "k": K_VALUES, "A": round(float(A_ALL[gi]), 1), "N": round(float(N_ALL[gi]), 1),
-               "grid": grid, "actual": actual},
+    "snaps": snaps, "storm_snap": storm_snap, "weights": WEIGHTS, "sc": SCALERS,
+    "fam": fam, "sj": sj, "kp_idx": env.index("Index_Kp"),
 }
 Path(ROOT / "poster/zoo").mkdir(parents=True, exist_ok=True)
 p = ROOT / "poster/zoo/zoo_data.json"

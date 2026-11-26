@@ -1,9 +1,10 @@
+<meta charset="utf-8">
 <title>Flight Model Zoo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one column of four "play" panels (race, look inside, poke, guess). Every panel is driven by the same real flight. */
+/* Layout: one column. Start button, a "meet the models" gallery, then three play panels (race, run a model live, beat them). */
 :root{
   --bg:#F6F7F9; --panel:#FFFFFF; --ink:#14213D; --muted:#5B6474; --line:#DCE1E8; --soft:#EEF1F5;
   --amber:#E8892B; --amber-soft:#FCE9D3; --teal:#24907F; --teal-soft:#D7F0EB; --red:#C8553D; --gray:#9AA3AF;
@@ -22,13 +23,14 @@
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 56px}
-main{max-width:1180px;margin:0 auto;display:grid;gap:22px}
+main{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:22px}
+.hero,footer{min-width:0}
 h1,h2{font-family:var(--display);font-weight:700;margin:0;line-height:1.05;text-wrap:balance}
 h1{font-size:clamp(40px,7vw,76px)} h2{font-size:clamp(28px,4vw,38px)}
 p{margin:0;max-width:68ch}
 .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .hero{display:grid;gap:14px}.lede{font-size:19px;color:var(--muted)}
-.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:6px}
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:12px;margin-top:6px}
 .how a{display:grid;gap:4px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;text-decoration:none;color:inherit}
 .how a:hover{border-color:var(--amber)}
 .how b{font-family:var(--display);font-size:22px}.how span{font-size:14px;color:var(--muted)}
@@ -41,14 +43,26 @@ svg text{font-family:var(--body);fill:var(--ink)}
 button{font:600 15px var(--body);color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:9px;padding:7px 14px;cursor:pointer}
 button:hover{border-color:var(--ink)}
 button.pri{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+button.big{font-size:19px;padding:12px 20px;max-width:100%;border-radius:12px;background:var(--amber);border-color:var(--amber);color:#1B1B1B}
 button[aria-pressed="true"]{background:var(--soft);border-color:var(--ink)}
-button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 input[type=range]{accent-color:var(--amber);min-width:120px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;align-items:center;gap:8px;padding:5px 11px;font-size:14px;border-radius:999px}
 .chip i{width:12px;height:12px;border-radius:50%;display:inline-block}
 .chip .v{font-family:var(--mono);font-size:13px;color:var(--muted);min-width:3.2ch;text-align:right}
 .chip[aria-pressed="false"]{opacity:.45}
+.models{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:12px}
+.mcard{display:grid;gap:8px;align-content:start;padding:14px 16px;background:var(--soft);border-radius:12px;font-size:15px}
+.mcard h3{margin:0;font:700 24px var(--display);display:flex;align-items:center;gap:8px}
+.mcard h3 i{width:14px;height:14px;border-radius:50%;display:inline-block}
+.mcard .full{font-size:13px;color:var(--muted);margin-top:-4px}
+.mcard .k{font-weight:600}
+.mcard svg{background:var(--panel);border-radius:8px}
+.mcard .pp{font-size:13px;color:var(--muted)}
+details{background:var(--soft);border-radius:10px;padding:10px 14px}
+summary{cursor:pointer;font-weight:600}
+dl{margin:10px 0 0;display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;font-size:15px}dt{font-weight:600}dd{margin:0}
 .board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
 @media (max-width:760px){.board{grid-template-columns:minmax(0,1fr)}}
 .board h3,.sub h3{margin:0 0 6px;font:600 15px var(--body);color:var(--muted)}
@@ -60,12 +74,8 @@ input[type=range]{accent-color:var(--amber);min-width:120px}
 .note{font-size:13.5px;color:var(--muted)}
 .callout{padding:12px 16px;border-radius:10px;background:var(--amber-soft);font-size:16px}
 [data-st]{transition:opacity .45s}
-.flow.on{stroke-dasharray:6 6;animation:dash .8s linear infinite}
-@keyframes dash{to{stroke-dashoffset:-12}}
-.win.on{animation:slide 4.4s steps(21,end) infinite}
-@keyframes slide{from{transform:translateX(0)}to{transform:translateX(273px)}}
-@media (prefers-reduced-motion:reduce){.flow.on,.win.on{animation:none}}
-.poke{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+@media (prefers-reduced-motion:reduce){[data-st]{transition:none}.mini-win{animation:none!important}}
+.edit{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:14px;align-items:end;padding:12px 14px;border:1px dashed var(--line);border-radius:10px}
 .slider{display:grid;gap:4px}.slider label{display:flex;justify-content:space-between;gap:8px;font-weight:600}
 .slider output{font-family:var(--mono);font-weight:500;font-size:14px;color:var(--muted);white-space:nowrap}
 .game{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
@@ -79,21 +89,52 @@ input[type=range]{accent-color:var(--amber);min-width:120px}
 .res .r.you{font-weight:700}
 .res .bar{height:12px;border-radius:4px;background:var(--soft);position:relative}.res .bar b{position:absolute;inset:0 auto 0 0;border-radius:4px}
 .scrollx{overflow-x:auto;min-width:0}
+@keyframes miniSlide{from{transform:translateX(0)}to{transform:translateX(152px)}}
+.mini-win{animation:miniSlide 3.2s steps(19) infinite}
 @media (max-width:760px){.scrollx svg{min-width:720px}.brow{grid-template-columns:130px minmax(0,1fr) 40px}.res .r{grid-template-columns:110px minmax(0,1fr) 84px}}
-footer{display:grid;gap:6px;color:var(--muted);font-size:13.5px}
+footer{display:grid;gap:6px;color:var(--muted);font-size:13.5px;overflow-wrap:anywhere}
+body{overflow-wrap:break-word}
 </style>
 
 <main>
   <section class="hero">
     <div class="eyebrow">CSC 8851 Deep Learning · Team 5 · Sanjib K C · aviation radiation dose</div>
     <h1>Flight Model Zoo</h1>
-    <p class="lede">One real flight. Six trained neural networks and a physics model try to follow the radiation dose measured on board. Watch them race, look inside each one, poke them, and see if you can beat them.</p>
-    <div class="how">
-      <a href="#race"><b>1 · Race</b><span>Press play and watch every model follow the flight.</span></a>
-      <a href="#inside"><b>2 · Look inside</b><span>Step through how each network turns data into a dose.</span></a>
-      <a href="#poke"><b>3 · Poke it</b><span>Change the storm or how far back a model may look.</span></a>
-      <a href="#game"><b>4 · Beat them</b><span>Guess the dose. Who is closest?</span></a>
+    <p class="lede">One real flight. A physics model and six trained neural networks try to follow the radiation dose measured on board. Meet them, watch them race, run any one of them live, and see if you can beat them.</p>
+    <div class="row">
+      <button class="big" id="start">▶ Start: watch the models race</button>
+      <button id="animtoggle" aria-pressed="true">Animation: on</button>
     </div>
+    <p class="note" id="motionNote" hidden>Your computer is set to reduce motion, so nothing starts by itself. Press Start, or any Play button, to run it.</p>
+    <div class="how">
+      <a href="#meet"><b>Meet the models</b><span>What an MLP, CNN–MLP, Flat MLP, TCN and Transformer are.</span></a>
+      <a href="#race"><b>1 · Race</b><span>Watch every model follow the flight.</span></a>
+      <a href="#inside"><b>2 · Run a model</b><span>Step through one live, and edit its inputs.</span></a>
+      <a href="#game"><b>3 · Beat them</b><span>Guess the dose. Who is closest?</span></a>
+    </div>
+  </section>
+
+  <section class="panel" id="meet" aria-labelledby="h-meet">
+    <header>
+      <div class="eyebrow">Start here</div>
+      <h2 id="h-meet">Meet the models</h2>
+      <p>They all do one job: look at a moment of a flight and output a <b>correction</b> to NAIRAS's estimate. <span class="mono">dose = NAIRAS + correction</span>. They differ only in how they read the last 24 hours of space weather.</p>
+    </header>
+    <div class="models" id="models"></div>
+    <details>
+      <summary>Words used here, in plain English</summary>
+      <dl>
+        <dt>Neuron</dt><dd>A tiny calculator: it adds up its inputs with weights and switches on if the total is big enough.</dd>
+        <dt>Layer</dt><dd>A row of neurons that all look at the same inputs. A network is layers in a stack.</dd>
+        <dt>MLP</dt><dd>Multi-Layer Perceptron: the simplest network, just stacked layers of neurons.</dd>
+        <dt>CNN</dt><dd>Convolutional Neural Network: slides a small filter along the data to find local patterns.</dd>
+        <dt>TCN</dt><dd>Temporal Convolutional Network: a CNN that skips hours so it can look far back in time.</dd>
+        <dt>Transformer</dt><dd>A network with attention: it learns which hours matter and mixes them with those weights.</dd>
+        <dt>Token</dt><dd>One hour of data (35 readings) treated as a single item.</dd>
+        <dt>Parameters</dt><dd>The numbers a network learns. More parameters can memorise more.</dd>
+        <dt>Overfitting</dt><dd>Memorising the training flights instead of learning something that works on new ones.</dd>
+      </dl>
+    </details>
   </section>
 
   <section class="panel" id="race" aria-labelledby="h-race">
@@ -120,13 +161,13 @@ footer{display:grid;gap:6px;color:var(--muted);font-size:13.5px}
   <section class="panel" id="inside" aria-labelledby="h-in">
     <header>
       <div class="eyebrow">Play 2</div>
-      <h2 id="h-in">Look inside a model</h2>
-      <p>Pick a model and step through it. Every colour and weight below is a real value from the trained network, for the moment of the flight you choose.</p>
+      <h2 id="h-in">Run a model live</h2>
+      <p>Pick a model and press Run. The network is computing in this page right now, so every colour and weight is real. Then edit its inputs and watch it respond.</p>
     </header>
     <div class="chips" id="tabs" role="tablist"></div>
     <div class="row">
+      <button class="pri" id="tour">▶ Run the model</button>
       <span class="row" id="stages" role="group" aria-label="Step"></span>
-      <button class="pri" id="tour">Play tour</button>
       <span id="layerbox" class="row" hidden role="group" aria-label="Attention layer"><button data-l="0" aria-pressed="true">Layer 1</button><button data-l="1" aria-pressed="false">Layer 2</button></span>
     </div>
     <div class="row">
@@ -134,28 +175,24 @@ footer{display:grid;gap:6px;color:var(--muted);font-size:13.5px}
       <button id="tostorm">Jump to the storm moment</button>
     </div>
     <div class="note" id="snapline"></div>
+    <div class="edit">
+      <div class="slider"><label for="eS">Storm in the past <output id="eSo"></output></label><input id="eS" type="range" min="0" max="150" step="5" value="100"></div>
+      <div class="slider"><label for="eK">How far back it may look <output id="eKo"></output></label><input id="eK" type="range" min="1" max="24" step="1" value="24"></div>
+      <div class="slider"><label for="eA">Altitude <output id="eAo"></output></label><input id="eA" type="range" min="8" max="15" step="0.1" value="12"></div>
+      <div class="slider"><label for="eR">Magnetic shield Rc <output id="eRo"></output></label><input id="eR" type="range" min="0" max="16" step="0.1" value="4"></div>
+      <button id="eReset">Reset edits</button>
+    </div>
+    <div class="note">Edits change what the networks receive; NAIRAS's own estimate stays fixed. Changing one input alone can make combinations that never happen in real flights, so read this as "what does the model respond to", not as a forecast. The Flat MLP and the MLP ignore the look-back edit by design.</div>
     <div class="scrollx"><svg id="scene" viewBox="0 0 900 510" role="img" aria-label="Diagram of the selected model processing the selected moment of the flight"></svg></div>
     <div class="caption" id="cap" aria-live="polite"></div>
-  </section>
-
-  <section class="panel" id="poke" aria-labelledby="h-poke">
-    <header>
-      <div class="eyebrow">Play 3</div>
-      <h2 id="h-poke">Poke the models</h2>
-      <p>This is the storm moment: measured dose far above what NAIRAS estimated. Edit what the networks see of the past 24 hours and watch their predictions. These are the models' reactions to edited inputs, not a physics simulation.</p>
-    </header>
-    <div class="poke">
-      <div class="slider"><label for="sS">Storm in the past <output id="sSo"></output></label><input id="sS" type="range" min="0" max="6" step="1" value="4"><span class="note">0% = the past looks like the present (no storm). 100% = what really happened.</span></div>
-      <div class="slider"><label for="sK">How far back the model may look <output id="sKo"></output></label><input id="sK" type="range" min="0" max="7" step="1" value="7"><span class="note">Hours older than this are replaced by the oldest visible hour.</span></div>
-      <div class="row" style="align-content:start"><button id="sweepK">Play: widen the look-back</button><button id="sweepS">Play: grow the storm</button></div>
-    </div>
-    <div class="scrollx"><svg id="pk" viewBox="0 0 900 330" role="img" aria-label="Each model's predicted dose for the edited inputs"></svg></div>
-    <div class="callout" id="pk-take"></div>
+    <h3 style="margin:6px 0 0;font:600 15px var(--body);color:var(--muted)">Every model on these same inputs</h3>
+    <div class="scrollx"><svg id="cmp" viewBox="0 0 900 300" role="img" aria-label="Every model's predicted dose for the current inputs"></svg></div>
+    <div class="callout" id="cmp-take"></div>
   </section>
 
   <section class="panel" id="game" aria-labelledby="h-game">
     <header>
-      <div class="eyebrow">Play 4</div>
+      <div class="eyebrow">Play 3</div>
       <h2 id="h-game">Beat the models</h2>
       <p>You see what the models see about one moment of the flight. Guess the measured dose, then lock in.</p>
     </header>
@@ -175,7 +212,7 @@ footer{display:grid;gap:6px;color:var(--muted);font-size:13.5px}
 
   <footer>
     <p id="foot1"></p>
-    <p>Every model here is a single trained network (seed 42) shown on a flight it never saw during training. The flight is one example, not a benchmark: the 18-run results are in the report. Attention and activations show what a network computed, not physical cause.</p>
+    <p>Every model here is a single trained network (seed 42), run live in your browser from its real trained weights (checked against the original PyTorch outputs), on a flight it never saw during training. The flight is one example, not a benchmark: the 18-run results are in the report. Activations and attention show what a network computed, not physical cause.</p>
     <p>Data: ARMAS and NAIRAS V3 machine-learning-ready data set (Sadykov et al., Space Weather 2026). Code: github.com/thesanjibkc/Deep_learning_project, branch final-project.</p>
   </footer>
 </main>
@@ -188,16 +225,86 @@ const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim
 function el(t,a,p,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;p&&p.appendChild(e);return e;}
 function H(tag,attrs,html){const e=document.createElement(tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(html!=null)e.innerHTML=html;return e;}
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),f1=v=>v.toFixed(1);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),f1=v=>v.toFixed(1),ease=p=>p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
 const KEYS=D.models.map(m=>m.key),NETS=KEYS.filter(k=>k!=="nairas"),M=Object.fromEntries(D.models.map(m=>[m.key,m]));
-const L=D.line,n=L.t.length,SN=D.snaps,SW=D.whatif;
+const L=D.line,n=L.t.length,SN=D.snaps;
 const col=k=>css("--c-"+k);
 const series=k=>k==="nairas"?L.N:L.preds[k];
-const state={pos:0,playing:false,speed:1,vis:new Set(KEYS),model:"trf",stage:4,tour:false,snap:D.storm_snap,layer:0};
+const state={pos:0,playing:false,speed:1,vis:new Set(KEYS),model:"trf",stage:4,tour:false,snap:D.storm_snap,layer:0,anim:!reduce};
+const ed={s:1,k:24,alt:null,rc:null};
+
+/* =============== the networks, running live (ported from PyTorch) =============== */
+const NT=24,NV=35,SC=D.sc,FAM=D.fam,SJ=D.sj,KPI=D.kp_idx;
+const WT={};for(const k in D.weights){WT[k]={};for(const nm in D.weights[k])WT[k][nm]=Float32Array.from(D.weights[k][nm].d);}
+const relu=x=>x>0?x:0;
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+.3275911*x);return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x));}
+const gelu=x=>.5*x*(1+erf(x/Math.SQRT2));
+function lin(x,w,b,nin,nout){const o=new Float32Array(nout);for(let j=0;j<nout;j++){let s=b[j];const base=j*nin;for(let i=0;i<nin;i++)s+=w[base+i]*x[i];o[j]=s;}return o;}
+function headOut(z,w){const h=lin(z,w["out.0.weight"],w["out.0.bias"],z.length,64).map(relu);return lin(h,w["out.3.weight"],w["out.3.bias"],64,1)[0];}
+const curEnc=(xc,w)=>lin(xc,w["cur.net.0.weight"],w["cur.net.0.bias"],9,32).map(relu);
+function toCT(z){const X=new Float32Array(NV*NT);for(let t=0;t<NT;t++)for(let v=0;v<NV;v++)X[v*NT+t]=z[t][v];return X;}
+function fMLP(inp){const w=WT.mlp,h1=lin(inp.xb,w["net.0.weight"],w["net.0.bias"],44,128).map(relu),h2=lin(h1,w["net.3.weight"],w["net.3.bias"],128,64).map(relu);
+  return{o:lin(h2,w["net.6.weight"],w["net.6.bias"],64,1)[0],int:{h1:Array.from(h1),h2:Array.from(h2)}};}
+function fFlat(inp){const w=WT.flat,x=new Float32Array(849);for(let t=0;t<NT;t++)for(let v=0;v<NV;v++)x[t*NV+v]=inp.z[t][v];for(let i=0;i<9;i++)x[840+i]=inp.xc[i];
+  const W0=w["net.0.weight"],h1=lin(x,W0,w["net.0.bias"],849,64).map(relu),h2=lin(h1,w["net.3.weight"],w["net.3.bias"],64,32).map(relu);
+  const hour=new Float32Array(NT);let tot=0;for(let u=0;u<64;u++)for(let t=0;t<NT;t++)for(let v=0;v<NV;v++){const c=Math.abs(W0[u*849+t*NV+v]*x[t*NV+v]);hour[t]+=c;tot+=c;}
+  return{o:lin(h2,w["net.6.weight"],w["net.6.bias"],32,1)[0],int:{hour:Array.from(hour,v=>v/tot),h1:Array.from(h1)}};}
+function convSame(X,cin,cout,w,b){const o=new Float32Array(cout*NT);for(let co=0;co<cout;co++)for(let t=0;t<NT;t++){let s=b[co];for(let ci=0;ci<cin;ci++)for(let k=0;k<3;k++){const tt=t+k-1;if(tt<0||tt>=NT)continue;s+=w[(co*cin+ci)*3+k]*X[ci*NT+tt];}o[co*NT+t]=s;}return o;}
+function fCNN(inp){const w=WT.cnn,X=toCT(inp.z),c1=convSame(X,NV,16,w["conv.0.weight"],w["conv.0.bias"]).map(relu),c2=convSame(c1,16,16,w["conv.3.weight"],w["conv.3.bias"]).map(relu);
+  const f=new Float32Array(64);for(let c=0;c<16;c++){let s=0;for(let t=0;t<NT;t++)s+=c2[c*NT+t];f[c]=s/NT;f[16+c]=c2[c*NT+NT-1];}f.set(curEnc(inp.xc,w),32);
+  return{o:headOut(f,w),int:{c2:Array.from({length:16},(_,c)=>Array.from(c2.slice(c*NT,c*NT+NT)))}};}
+function convCausal(X,w,b,d){const o=new Float32Array(16*NT);for(let co=0;co<16;co++)for(let t=0;t<NT;t++){let s=b[co];for(let ci=0;ci<16;ci++)for(let k=0;k<3;k++){const tt=t-(2-k)*d;if(tt<0)continue;s+=w[(co*16+ci)*3+k]*X[ci*NT+tt];}o[co*NT+t]=s;}return o;}
+function fTCN(inp){const w=WT.tcn,X=toCT(inp.z);let h=new Float32Array(16*NT);
+  for(let co=0;co<16;co++)for(let t=0;t<NT;t++){let s=w["inp.bias"][co];for(let v=0;v<NV;v++)s+=w["inp.weight"][co*NV+v]*X[v*NT+t];h[co*NT+t]=s;}
+  const mean=(a,abs)=>Array.from({length:NT},(_,t)=>{let s=0;for(let c=0;c<16;c++)s+=abs?Math.abs(a[c*NT+t]):a[c*NT+t];return s/16;});
+  const rows=[mean(h,true)];
+  [1,2,4,8].forEach((d,bi)=>{const p=`blocks.${bi}.`;let a=convCausal(h,w[p+"c1.weight"],w[p+"c1.bias"],d).map(relu);a=convCausal(a,w[p+"c2.weight"],w[p+"c2.bias"],d).map(relu);
+    const o=new Float32Array(16*NT);for(let i=0;i<o.length;i++)o[i]=relu(h[i]+a[i]);h=o;rows.push(mean(h,false));});
+  const f=new Float32Array(48);for(let c=0;c<16;c++)f[c]=h[c*NT+NT-1];f.set(curEnc(inp.xc,w),16);
+  return{o:headOut(f,w),int:{layers:rows}};}
+function layerNorm(x,w,b){const m=x.reduce((a,v)=>a+v,0)/x.length;let vr=0;for(const v of x)vr+=(v-m)*(v-m);vr/=x.length;const s=1/Math.sqrt(vr+1e-5);return Float32Array.from(x,(v,i)=>(v-m)*s*w[i]+b[i]);}
+function fTRF(inp,key){const w=WT[key],S=25;const h=[Float32Array.from(w.summary,(v,i)=>v+w.pos[i])];
+  for(let t=0;t<NT;t++){const e=lin(inp.z[t],w["embed.weight"],w["embed.bias"],NV,16);h.push(Float32Array.from(e,(v,i)=>v+w.pos[(t+1)*16+i]));}
+  const att=[];
+  for(let bi=0;bi<2;bi++){const p=`blocks.${bi}.`,x=h.map(r=>layerNorm(r,w[p+"n1.weight"],w[p+"n1.bias"])),Wi=w[p+"attn.in_proj_weight"],Bi=w[p+"attn.in_proj_bias"];
+    const q=x.map(r=>lin(r,Wi.subarray(0,256),Bi.subarray(0,16),16,16)),k=x.map(r=>lin(r,Wi.subarray(256,512),Bi.subarray(16,32),16,16)),v=x.map(r=>lin(r,Wi.subarray(512,768),Bi.subarray(32,48),16,16));
+    const ctx=Array.from({length:S},()=>new Float32Array(16)),wts=[];
+    for(let hh=0;hh<4;hh++){let row0=null;for(let s=0;s<S;s++){const sc=new Float32Array(S);let mx=-1e9;
+      for(let s2=0;s2<S;s2++){let a=0;for(let c=0;c<4;c++)a+=q[s][hh*4+c]*k[s2][hh*4+c];a/=2;sc[s2]=a;if(a>mx)mx=a;}
+      let sum=0;for(let s2=0;s2<S;s2++){sc[s2]=Math.exp(sc[s2]-mx);sum+=sc[s2];}for(let s2=0;s2<S;s2++)sc[s2]/=sum;
+      for(let c=0;c<4;c++){let a=0;for(let s2=0;s2<S;s2++)a+=sc[s2]*v[s2][hh*4+c];ctx[s][hh*4+c]=a;}
+      if(s===0)row0=Array.from(sc.slice(1));}wts.push(row0);}
+    att.push(wts);
+    for(let s=0;s<S;s++){const ao=lin(ctx[s],w[p+"attn.out_proj.weight"],w[p+"attn.out_proj.bias"],16,16);h[s]=h[s].map((val,i)=>val+ao[i]);}
+    for(let s=0;s<S;s++){const y=layerNorm(h[s],w[p+"n2.weight"],w[p+"n2.bias"]),a=lin(y,w[p+"ff.0.weight"],w[p+"ff.0.bias"],16,32).map(gelu),f=lin(a,w[p+"ff.3.weight"],w[p+"ff.3.bias"],32,16);h[s]=h[s].map((val,i)=>val+f[i]);}}
+  const f=new Float32Array(48);f.set(layerNorm(h[0],w["norm.weight"],w["norm.bias"]),0);f.set(curEnc(inp.xc,w),16);
+  return{o:headOut(f,w),int:{att}};}
+function makeInput(sn,e){const z=sn.zs.map(r=>Float32Array.from(r));
+  if(e.s!==1)for(let t=0;t<NT;t++)for(const v of FAM)z[t][v]=z[NT-1][v]+e.s*(z[t][v]-z[NT-1][v]);
+  if(e.k<NT)for(let t=0;t<NT-e.k;t++)z[t]=Float32Array.from(z[NT-e.k]);
+  const xc=Float32Array.from(sn.xc),xb=Float32Array.from(sn.xb),alt=e.alt==null?sn.alt:e.alt,rc=e.rc==null?sn.rc:e.rc,da=(alt-sn.alt)*1000,dr=rc-sn.rc;
+  xc[2]+=da/SC.cur_sd[2];xc[3]+=da/SC.cur_sd[3];xb[2]+=da/SC.b_sd[2];xb[3]+=da/SC.b_sd[3];xc[6]+=dr/SC.cur_sd[6];xb[6]+=dr/SC.b_sd[6];
+  return{z,xc,xb,alt,rc};}
+function runAll(inp,N){const res={nairas:{pred:N,int:{}}};
+  for(const k of NETS){const r=k==="mlp"?fMLP(inp):k==="flat"?fFlat(inp):k==="cnn"?fCNN(inp):k==="tcn"?fTCN(inp):fTRF(inp,k);res[k]={pred:N+r.o*SC.ysd+SC.ymu,int:r.int};}return res;}
+let VM=null;
+function rebuildVM(){const sn=SN[state.snap],inp=makeInput(sn,ed),res=runAll(inp,sn.N);
+  VM={alt:inp.alt,rc:inp.rc,lat:sn.lat,lon:sn.lon,N:sn.N,A:sn.A,t:sn.t,
+    z:SJ.map(j=>Array.from(inp.z,r=>r[j])),kp:Array.from(inp.z,r=>clamp((r[KPI]*SC.seq_sd[KPI]+SC.seq_mu[KPI])/10,0,9)),
+    preds:Object.fromEntries(KEYS.map(k=>[k,res[k].pred])),int:Object.fromEntries(KEYS.map(k=>[k,res[k].int]))};}
 
 $("#flightline").textContent=`${D.meta.storm_label}. ${D.meta.aircraft} aircraft, ${D.meta.rows} readings over ${Math.floor(D.meta.minutes/60)} h ${D.meta.minutes%60} min, starting ${D.meta.start}. Split: ${D.meta.split}, so none of these networks saw this flight in training.`;
 $("#foot1").textContent=`Flight: ${D.meta.aircraft}, ${D.meta.start}. Networks trained on ${D.meta.split.split(", ")[0].replace("train ","")} only.`;
-[ "#scrub","#scrub2"].forEach(s=>$(s).max=n-1);
+["#scrub","#scrub2"].forEach(s=>$(s).max=n-1);
+
+/* =============== animation clock for the step-through =============== */
+let ANIMS=[],animRAF=0;
+function reg(st,fn){ANIMS.push({st,fn});}
+function runAnim(skip){cancelAnimationFrame(animRAF);const st=Math.min(state.stage,nStages(state.model));
+  ANIMS.forEach(a=>{if(a.st<st)a.fn(1);else if(a.st>st)a.fn(0);});
+  const cur=ANIMS.filter(a=>a.st===st);if(skip||!state.anim||!cur.length){cur.forEach(a=>a.fn(1));return;}
+  cur.forEach(a=>a.fn(0));const t0=performance.now();
+  const loop=now=>{const p=clamp((now-t0)/2400,0,1);cur.forEach(a=>a.fn(ease(p)));if(p<1)animRAF=requestAnimationFrame(loop);};animRAF=requestAnimationFrame(loop);}
 
 /* =============== PLAY 1: the race =============== */
 const TLg={x0:58,x1:886,y0:14,y1:318,ay0:344,ay1:396};
@@ -210,14 +317,12 @@ let SER=[];
 function buildTL(){
   const s=$("#tl");s.innerHTML="";const muted=css("--muted"),line=css("--line"),ink=css("--ink");
   el("rect",{x:TLg.x0,y:Y(ymax),width:TLg.x1-TLg.x0,height:Y(15)-Y(ymax),fill:css("--amber-soft"),opacity:.7},s);
-  for(let v=0;v<=ymax;v+=5){el("line",{x1:TLg.x0,x2:TLg.x1,y1:Y(v),y2:Y(v),stroke:line,"stroke-width":1},s);
-    el("text",{x:TLg.x0-8,y:Y(v)+4,"text-anchor":"end","font-size":12,class:"mono",style:`fill:${muted}`},s,v);}
+  for(let v=0;v<=ymax;v+=5){el("line",{x1:TLg.x0,x2:TLg.x1,y1:Y(v),y2:Y(v),stroke:line,"stroke-width":1},s);el("text",{x:TLg.x0-8,y:Y(v)+4,"text-anchor":"end","font-size":12,class:"mono",style:`fill:${muted}`},s,v);}
   el("text",{x:TLg.x1-6,y:TLg.y0+16,"text-anchor":"end","font-size":12,"font-weight":600,style:`fill:${css("--amber")}`},s,"shaded: high dose, above 15 µSv/h");
   for(let m=0;m<=tMax;m+=60)el("text",{x:X(m),y:TLg.ay1+16,"text-anchor":"middle","font-size":12,style:`fill:${muted}`},s,m===0?"start":`${m/60} h`);
   el("text",{x:TLg.x0,y:TLg.ay0-8,"font-size":12,style:`fill:${muted}`},s,`altitude ${altMin}–${altMax} km`);
   el("path",{d:`M${X(L.t[0])},${TLg.ay1} `+L.alt.map((a,i)=>`L${X(L.t[i])},${AY(a)}`).join(" ")+` L${X(L.t[n-1])},${TLg.ay1}z`,fill:line,opacity:.7},s);
-  const sn=SN[D.storm_snap];
-  el("line",{x1:X(sn.t),x2:X(sn.t),y1:TLg.y0,y2:TLg.ay1,stroke:col("trf"),"stroke-dasharray":"3 5","stroke-width":1.5},s);
+  const sn=SN[D.storm_snap];el("line",{x1:X(sn.t),x2:X(sn.t),y1:TLg.y0,y2:TLg.ay1,stroke:col("trf"),"stroke-dasharray":"3 5","stroke-width":1.5},s);
   el("text",{x:X(sn.t)+6,y:TLg.y0+12,"font-size":12,"font-weight":600,style:`fill:${css("--amber")}`},s,"storm moment");
   SER=[{k:"A",vals:L.A,color:ink,w:3.4,dash:""},{k:"nairas",vals:L.N,color:col("nairas"),w:2,dash:"7 5"},...NETS.map(k=>({k,vals:L.preds[k],color:col(k),w:2.1,dash:""}))];
   SER.forEach(se=>{se.line=el("polyline",{fill:"none",stroke:se.color,"stroke-width":se.w,"stroke-dasharray":se.dash,"stroke-linejoin":"round","stroke-linecap":"round"},s);
@@ -263,141 +368,158 @@ function seek(p){setPlay(false);state.pos=clamp(p,0,n-1);updateTL(true);syncSnap
 $("#scrub").oninput=e=>seek(+e.target.value);$("#scrub2").oninput=e=>seek(+e.target.value);
 $("#tl").addEventListener("click",e=>{const r=$("#tl").getBoundingClientRect(),vx=(e.clientX-r.left)/r.width*900;
   const t=tMin+(vx-TLg.x0)/(TLg.x1-TLg.x0)*(tMax-tMin);let bi=0;L.t.forEach((tt,i)=>{if(Math.abs(tt-t)<Math.abs(L.t[bi]-t))bi=i;});seek(bi);});
+$("#start").onclick=()=>{state.anim=true;$("#animtoggle").textContent="Animation: on";$("#animtoggle").setAttribute("aria-pressed","true");
+  $("#race").scrollIntoView({behavior:reduce?"auto":"smooth"});state.pos=0;updateTL(true);syncSnap();setPlay(true);};
+$("#animtoggle").onclick=()=>{state.anim=!state.anim;$("#animtoggle").textContent="Animation: "+(state.anim?"on":"off");$("#animtoggle").setAttribute("aria-pressed",state.anim);};
 
-/* =============== PLAY 2: look inside =============== */
+/* =============== PLAY 2: run a model live =============== */
 const STAGES={nairas:["1 Inputs","2 Physics","3 Compare"],mlp:["1 Inputs","2 Layer 1","3 Layer 2","4 Output"],flat:["1 Inputs","2 Unroll","3 Dense layer","4 Output"],
-  cnn:["1 Inputs","2 Slide filters","3 Feature maps","4 Pool and output"],tcn:["1 Inputs","2 Dilated layers","3 Reach","4 Output"],
+  cnn:["1 Inputs","2 Slide filters","3 Pool","4 Output"],tcn:["1 Inputs","2 Dilated layers","3 Reach","4 Output"],
   trf:["1 Tokens","2 Ask","3 Attention","4 Output"],trfw:["1 Tokens","2 Ask","3 Attention","4 Output"]};
 const nStages=k=>STAGES[k].length;
 function snapNear(){let b=0;SN.forEach((s,i)=>{if(Math.abs(s.i-state.pos)<Math.abs(SN[b].i-state.pos))b=i;});return b;}
-function syncSnap(){const b=snapNear();if(b!==state.snap){state.snap=b;buildScene();}}
+function setSnap(b){state.snap=b;ed.alt=ed.rc=null;$("#eA").value=SN[b].alt;$("#eR").value=SN[b].rc;refresh(true);}
+function syncSnap(){const b=snapNear();if(b!==state.snap)setSnap(b);}
+function refresh(skip){rebuildVM();buildScene(skip);drawCmp();editLabels();}
+function editLabels(){$("#eSo").textContent=`${Math.round(ed.s*100)}%`;$("#eKo").textContent=`${ed.k} h`;$("#eAo").textContent=`${f1(VM.alt)} km`;$("#eRo").textContent=`${f1(VM.rc)} GV`;}
 let SE=[];
 function S(st,node){node.setAttribute("data-st",st);SE.push(node);return node;}
-function applyStage(){const st=Math.min(state.stage,nStages(state.model));SE.forEach(e=>{const s=+e.dataset.st;e.style.opacity=s<=st?1:.08;e.classList.toggle("on",s===st);});
-  const sn=SN[state.snap];$("#cap").textContent=caption(state.model,st,sn);
-  $$("#stages button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.s===st));}
+function applyStage(skip){const st=Math.min(state.stage,nStages(state.model));SE.forEach(e=>{const s=+e.dataset.st;e.style.opacity=s<=st?1:.08;});
+  $("#cap").textContent=caption(state.model,st,VM);$$("#stages button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.s===st));runAnim(skip);}
 function buildTabs(){const t=$("#tabs");t.innerHTML="";KEYS.forEach(k=>{
   const b=H("button",{class:"chip",role:"tab","aria-pressed":k===state.model,style:`border:1px solid ${col(k)}`},`<i style="background:${col(k)}"></i>${M[k].label}`);
-  b.onclick=()=>{state.model=k;state.stage=1;state.tour=false;$("#tour").textContent="Play tour";
-    $$("#tabs button").forEach(x=>x.setAttribute("aria-pressed",x===b));buildStageChips();$("#layerbox").hidden=!(k==="trf"||k==="trfw");buildScene();if(!reduce)startTour();};t.appendChild(b);});}
+  b.onclick=()=>pickModel(k);t.appendChild(b);});}
+function pickModel(k,scroll){state.model=k;state.stage=1;stopTour();$$("#tabs button").forEach((x,i)=>x.setAttribute("aria-pressed",KEYS[i]===k));
+  buildStageChips();$("#layerbox").hidden=!(k==="trf"||k==="trfw");buildScene(true);if(scroll)$("#inside").scrollIntoView({behavior:reduce?"auto":"smooth"});startTour();}
 function buildStageChips(){const s=$("#stages");s.innerHTML="";STAGES[state.model].forEach((lab,i)=>{
   const b=H("button",{"data-s":i+1,"aria-pressed":i+1===state.stage},lab);b.onclick=()=>{stopTour();state.stage=i+1;applyStage();};s.appendChild(b);});}
 let tourTimer=null;
-function stopTour(){state.tour=false;clearInterval(tourTimer);$("#tour").textContent="Play tour";}
-function startTour(){stopTour();state.tour=true;$("#tour").textContent="Pause tour";state.stage=1;applyStage();
-  tourTimer=setInterval(()=>{if(state.stage>=nStages(state.model)){stopTour();return;}state.stage++;applyStage();},2800);}
+function stopTour(){state.tour=false;clearInterval(tourTimer);$("#tour").textContent="▶ Run the model";}
+function startTour(){stopTour();state.tour=true;$("#tour").textContent="Pause";state.stage=1;applyStage();
+  tourTimer=setInterval(()=>{if(state.stage>=nStages(state.model)){stopTour();return;}state.stage++;applyStage();},3000);}
 $("#tour").onclick=()=>state.tour?stopTour():startTour();
-$$("[data-l]").forEach(b=>b.onclick=()=>{state.layer=+b.dataset.l;$$("[data-l]").forEach(x=>x.setAttribute("aria-pressed",x===b));buildScene();});
+$$("[data-l]").forEach(b=>b.onclick=()=>{state.layer=+b.dataset.l;$$("[data-l]").forEach(x=>x.setAttribute("aria-pressed",x===b));buildScene(true);});
 $("#tostorm").onclick=()=>seek(SN[D.storm_snap].i);
+function edited(){setPlay(false);refresh(true);}
+$("#eS").oninput=e=>{ed.s=+e.target.value/100;edited();};$("#eK").oninput=e=>{ed.k=+e.target.value;edited();};
+$("#eA").oninput=e=>{ed.alt=+e.target.value;edited();};$("#eR").oninput=e=>{ed.rc=+e.target.value;edited();};
+$("#eReset").onclick=()=>{ed.s=1;ed.k=24;ed.alt=ed.rc=null;$("#eS").value=100;$("#eK").value=24;$("#eA").value=SN[state.snap].alt;$("#eR").value=SN[state.snap].rc;refresh(true);};
 
 const A_=v=>clamp(v,0,1);
 function T(g,x,y,txt,o={}){const t=el("text",{x,y,"font-size":o.size||13,"text-anchor":o.anchor||"start","font-weight":o.bold?600:400,class:o.mono?"mono":""},g,txt);if(o.color)t.style.fill=o.color;return t;}
 function inputs(g,sn,o){
-  const gy=o.gy,x0=104,cw=13,ch=14,muted=css("--muted"),amber=css("--amber"),teal=css("--teal"),panel=css("--panel");
+  const gy=o.gy,x0=104,cw=13,ch=14,muted=css("--muted"),amber=css("--amber"),teal=css("--teal");
   T(g,40,o.noTitle?22:gy-16,"Last 24 hours of space weather: one column per hour",{size:13,bold:true});
-  D.vars.forEach((v,j)=>T(g,x0-6,gy+j*ch+11,["Neutrons","Kp","Dst","Bz","Speed","Pressure"][j],{anchor:"end",size:11,color:muted}));
+  ["Neutrons","Kp","Dst","Bz","Speed","Pressure"].forEach((v,j)=>T(g,x0-6,gy+j*ch+11,v,{anchor:"end",size:11,color:muted}));
   const grid=el("g",{},g);
   for(let t=0;t<24;t++)for(let j=0;j<6;j++){const z=sn.z[j][t];
     const r=el("rect",{x:x0+t*cw+1,y:gy+j*ch,width:cw-2,height:ch-2,rx:2,fill:z>=0?amber:teal,"fill-opacity":(A_(Math.abs(z)/3.5)*.85+.1).toFixed(2)},grid);
     if((o.lastOnly&&t<23)||o.dimAll)r.setAttribute("opacity",.22);}
   T(g,x0,gy+6*ch+13,"23 h ago",{size:11,color:muted});T(g,x0+12*cw,gy+6*ch+13,"12 h",{size:11,color:muted,anchor:"middle"});T(g,x0+24*cw,gy+6*ch+13,"now",{size:11,color:muted,anchor:"end"});
   if(o.lastOnly)T(g,x0+24*cw,gy-4,"only this column is used",{size:11,color:css("--red"),anchor:"end",bold:true});
-  if(o.dimAll)T(g,x0+24*cw,gy-4,"not used by NAIRAS",{size:11,color:css("--muted"),anchor:"end",bold:true});
+  if(o.dimAll)T(g,x0+24*cw,gy-4,"not used by NAIRAS",{size:11,color:muted,anchor:"end",bold:true});
   const ky=gy+6*ch+22;T(g,x0-6,ky+30,"Kp storm index",{anchor:"end",size:11,color:muted});
   sn.kp.forEach((k,t)=>el("rect",{x:x0+t*cw+2,y:ky+34-k/9*34,width:cw-4,height:Math.max(1,k/9*34),rx:1.5,fill:k>=5?css("--red"):css("--gray")},g));
   const cy=ky+50;el("rect",{x:40,y:cy,width:372,height:76,rx:10,fill:css("--soft")},g);
   T(g,54,cy+19,"Where the plane is",{size:13,bold:true});
-  T(g,54,cy+38,`altitude ${sn.alt} km · shield Rc ${sn.rc} GV`,{size:13});T(g,54,cy+55,`lat ${sn.lat}°, lon ${sn.lon}°`,{size:13});
+  T(g,54,cy+38,`altitude ${f1(sn.alt)} km · shield Rc ${f1(sn.rc)} GV`,{size:13});T(g,54,cy+55,`lat ${sn.lat}°, lon ${sn.lon}°`,{size:13});
   T(g,54,cy+71,`NAIRAS estimate: ${sn.N} µSv/h`,{size:13,bold:true,color:col("nairas")});
-  return {gx:x0,cw,gy,cardBottom:cy+76};
+  return{gx:x0,cw,gy};
 }
 function ruler(g,sn,key,sN,sP,sA){
   const x0=70,x1=830,y=470,vmax=Math.max(32,Math.ceil(Math.max(sn.A,sn.N,sn.preds[key]||0)/4)*4+2),V=v=>x0+v/vmax*(x1-x0),muted=css("--muted"),ink=css("--ink");
   el("line",{x1:x0,x2:x1,y1:y,y2:y,stroke:muted,"stroke-width":1.5},g);
   for(let v=0;v<=vmax;v+=5){el("line",{x1:V(v),x2:V(v),y1:y,y2:y+5,stroke:muted},g);T(g,V(v),y+19,v,{size:11,anchor:"middle",color:muted,mono:true});}
   T(g,x1+10,y+4,"µSv/h",{size:11,color:muted});
-  const mk=(v,row,color,label,st)=>{const gg=S(st,el("g",{},g));el("line",{x1:V(v),x2:V(v),y1:y,y2:row+5,stroke:color,"stroke-width":1.5},gg);
-    el("circle",{cx:V(v),cy:y,r:5.5,fill:color},gg);T(gg,clamp(V(v),110,790),row,label,{anchor:"middle",size:13,bold:true,color});};
-  mk(sn.N,432,col("nairas"),`NAIRAS ${sn.N}`,sN);
-  if(key!=="nairas"){const p=sn.preds[key];const seg=S(sP,el("line",{x1:V(sn.N),x2:V(p),y1:y,y2:y,stroke:col(key),"stroke-width":9,opacity:.4,"stroke-linecap":"round"},g));
-    mk(p,414,col(key),`${M[key].label} ${f1(p)}`,sP);}
+  const mk=(v,row,color,label,st)=>{const gg=S(st,el("g",{},g)),ln=el("line",{x1:V(v),x2:V(v),y1:y,y2:row+5,stroke:color,"stroke-width":1.5},gg),ci=el("circle",{cx:V(v),cy:y,r:5.5,fill:color},gg),tx=T(gg,clamp(V(v),110,790),row,label,{anchor:"middle",size:13,bold:true,color});return{ln,ci,tx};};
+  mk(sn.N,432,col("nairas"),`NAIRAS ${f1(sn.N)}`,sN);
+  if(key!=="nairas"){const p=sn.preds[key],seg=S(sP,el("line",{x1:V(sn.N),x2:V(p),y1:y,y2:y,stroke:col(key),"stroke-width":9,opacity:.4,"stroke-linecap":"round"},g)),m=mk(p,414,col(key),`${M[key].label} ${f1(p)}`,sP);
+    reg(sP,q=>{const v=sn.N+(p-sn.N)*q,x=V(v);seg.setAttribute("x2",x);m.ln.setAttribute("x1",x);m.ln.setAttribute("x2",x);m.ci.setAttribute("cx",x);m.tx.setAttribute("x",clamp(x,110,790));m.tx.textContent=`${M[key].label} ${f1(v)}`;});}
   mk(sn.A,396,ink,`measured ${sn.A}`,sA);
 }
-function link(g,x1,y1,x2,y2,st){return S(st,el("path",{d:`M${x1},${y1} C${(x1+x2)/2},${y1} ${(x1+x2)/2},${y2} ${x2},${y2}`,fill:"none",stroke:css("--amber"),"stroke-width":2,class:"flow",opacity:.9},g));}
+function link(g,x1,y1,x2,y2,st){const path=S(st,el("path",{d:`M${x1},${y1} C${(x1+x2)/2},${y1} ${(x1+x2)/2},${y2} ${x2},${y2}`,fill:"none",stroke:css("--amber"),"stroke-width":2,opacity:.9},g));
+  const dots=[0,1].map(()=>el("circle",{r:4,fill:css("--amber"),opacity:0},g));
+  reg(st,p=>{const len=path.getTotalLength();dots.forEach((d,i)=>{const q=clamp(p*1.4-i*.25,0,1),pt=path.getPointAtLength(len*q);d.setAttribute("cx",pt.x);d.setAttribute("cy",pt.y);d.setAttribute("opacity",p>0&&p<1&&q>0&&q<1?.95:0);});});}
 function dots(g,vals,x,y,cols,rw,rh,r,color,title,st){const gg=S(st,el("g",{},g));T(gg,x,y-10,title,{size:13,bold:true});
-  const mx=Math.max(1e-6,...vals);vals.forEach((v,i)=>el("circle",{cx:x+(i%cols)*rw+r,cy:y+Math.floor(i/cols)*rh+r,r,fill:color,"fill-opacity":(.08+.92*A_(v/mx)).toFixed(2)},gg));return gg;}
-function buildScene(){
-  const svg=$("#scene");svg.innerHTML="";SE=[];const g=el("g",{},svg),k=state.model,sn=SN[state.snap];
-  $("#snapline").textContent=`Showing the moment ${Math.floor(sn.t/60)} h ${Math.round(sn.t%60)} min into the flight: altitude ${sn.alt} km, measured ${sn.A} µSv/h. Drag the slider to change the moment.`;
-  const isT=k==="trf"||k==="trfw",gy=isT?122:62,info=inputs(g,sn,{gy,lastOnly:k==="mlp",dimAll:k==="nairas",noTitle:isT});
-  const nA=nStages(k),fin=nA;
-  const rx=462;
+  const mx=Math.max(1e-6,...vals),cs=vals.map((v,i)=>({c:el("circle",{cx:x+(i%cols)*rw+r,cy:y+Math.floor(i/cols)*rh+r,r,fill:color},gg),b:.08+.92*A_(v/mx)}));
+  reg(st,p=>cs.forEach((o,i)=>{const q=clamp((p-i/cs.length*.6)/.4,0,1);o.c.setAttribute("fill-opacity",(o.b*q).toFixed(2));o.c.setAttribute("r",(r*(.4+.6*q)).toFixed(2));}));return gg;}
+function buildScene(skip){
+  const svg=$("#scene");svg.innerHTML="";SE=[];ANIMS=[];if(!VM)rebuildVM();
+  const g=el("g",{},svg),k=state.model,sn=VM;
+  $("#snapline").textContent=`Showing the moment ${Math.floor(sn.t/60)} h ${Math.round(sn.t%60)} min into the flight (${SN[state.snap].alt} km, measured ${sn.A} µSv/h). Drag the slider to change the moment.`;
+  const isT=k==="trf"||k==="trfw",gy=isT?122:62,info=inputs(g,sn,{gy,lastOnly:k==="mlp",dimAll:k==="nairas",noTitle:isT}),nA=nStages(k),rx=462;
   if(k==="nairas"){
-    [["Altitude",`${sn.alt} km`],["Magnetic shield Rc",`${sn.rc} GV`],["Position",`${sn.lat}°, ${sn.lon}°`]].forEach(([a,b],i)=>{const gg=S(1,el("g",{},g));
+    [["Altitude",`${f1(sn.alt)} km`],["Magnetic shield Rc",`${f1(sn.rc)} GV`],["Position",`${sn.lat}°, ${sn.lon}°`]].forEach(([a,b],i)=>{const gg=S(1,el("g",{},g));
       el("rect",{x:rx,y:60+i*62,width:190,height:50,rx:9,fill:css("--teal-soft")},gg);T(gg,rx+14,60+i*62+21,a,{size:13,color:css("--muted")});T(gg,rx+14,60+i*62+40,b,{size:16,bold:true,mono:true});});
     const p=S(2,el("g",{},g));el("rect",{x:rx+240,y:60,width:170,height:170,rx:12,fill:css("--soft"),stroke:css("--c-nairas"),"stroke-width":2},p);
     T(p,rx+325,110,"NAIRAS V3",{anchor:"middle",size:18,bold:true});T(p,rx+325,134,"physics model",{anchor:"middle",size:13});
-    T(p,rx+325,160,"traces cosmic rays",{anchor:"middle",size:12,color:css("--muted")});T(p,rx+325,177,"through the magnetic",{anchor:"middle",size:12,color:css("--muted")});T(p,rx+325,194,"field and atmosphere",{anchor:"middle",size:12,color:css("--muted")});
+    ["traces cosmic rays","through the magnetic","field and atmosphere"].forEach((t,i)=>T(p,rx+325,160+i*17,t,{anchor:"middle",size:12,color:css("--muted")}));
     for(let i=0;i<3;i++)link(g,rx+192,85+i*62,rx+240,100+i*30,2);
-    const o=S(2,el("g",{},g));T(o,rx+325,262,`estimate: ${sn.N} µSv/h`,{anchor:"middle",size:17,bold:true,mono:true,color:css("--ink")});T(o,rx+325,284,"no learning involved",{anchor:"middle",size:12,color:css("--muted")});
+    const o=S(2,el("g",{},g));T(o,rx+325,262,`estimate: ${f1(sn.N)} µSv/h`,{anchor:"middle",size:17,bold:true,mono:true,color:css("--ink")});T(o,rx+325,284,"no learning involved",{anchor:"middle",size:12,color:css("--muted")});
   } else if(k==="mlp"){
-    link(g,418,150,rx-6,150,2);
-    dots(g,sn.int.mlp.h1,rx,78,16,22,19,7,col("mlp"),"Layer 1: 128 neurons (brighter = more active)",2);
-    link(g,rx+176,236,rx+176,262,3);
-    dots(g,sn.int.mlp.h2,rx,284,16,22,19,7,col("mlp"),"Layer 2: 64 neurons",3);
-    link(g,rx+176,364,rx+176,382,4);
+    link(g,418,150,rx-6,150,2);dots(g,sn.int.mlp.h1,rx,78,16,22,19,7,col("mlp"),"Layer 1: 128 neurons (brighter = more active)",2);
+    link(g,rx+176,236,rx+176,262,3);dots(g,sn.int.mlp.h2,rx,284,16,22,19,7,col("mlp"),"Layer 2: 64 neurons",3);link(g,rx+176,364,rx+176,382,4);
   } else if(k==="flat"){
     link(g,418,150,rx-6,150,2);
     const gg=S(2,el("g",{},g));T(gg,rx,66,"How much weight the first layer puts on each hour",{size:13,bold:true});
-    const hr=sn.int.flat.hour,mx=Math.max(...hr);hr.forEach((v,i)=>el("rect",{x:rx+i*15.5,y:210-v/mx*110,width:12,height:v/mx*110,rx:2,fill:col("flat")},gg));
+    const hr=sn.int.flat.hour,mx=Math.max(...hr),bars=hr.map((v,i)=>({e:el("rect",{x:rx+i*15.5,width:12,rx:2,fill:col("flat")},gg),h:v/mx*110}));
     el("line",{x1:rx,x2:rx+24*15.5,y1:210-(1/24)/mx*110,y2:210-(1/24)/mx*110,stroke:css("--ink"),"stroke-dasharray":"4 4"},gg);T(gg,rx+24*15.5,210-(1/24)/mx*110-5,"equal share",{anchor:"end",size:11,color:css("--muted")});
     T(gg,rx,228,"23 h ago",{size:11,color:css("--muted")});T(gg,rx+24*15.5,228,"now",{size:11,color:css("--muted"),anchor:"end"});
-    dots(g,sn.int.flat.h1,rx,284,16,22,19,7,col("flat"),"Dense layer: 64 neurons",3);
-    link(g,rx+176,364,rx+176,382,4);
+    reg(2,p=>bars.forEach((b,i)=>{const q=ease(clamp(p*1.5-i/24*.5,0,1)),h=b.h*q;b.e.setAttribute("y",210-h);b.e.setAttribute("height",Math.max(0,h));}));
+    link(g,rx+176,252,rx+176,274,3);dots(g,sn.int.flat.h1,rx,284,16,22,19,7,col("flat"),"Dense layer: 64 neurons",3);link(g,rx+176,364,rx+176,382,4);
   } else if(k==="cnn"){
-    const w=el("rect",{x:info.gx,y:info.gy-2,width:3*info.cw,height:6*14+3,rx:3,fill:"none",stroke:css("--amber"),"stroke-width":2.5,class:"win"},g);S(2,w);
-    link(g,418,150,rx-6,150,3);
-    const gg=S(3,el("g",{},g));T(gg,rx,66,"16 learned filters × 24 hours (brighter = pattern present)",{size:13,bold:true});
-    const c2=sn.int.cnn.c2,mx=Math.max(1e-6,...c2.flat());c2.forEach((row,j)=>row.forEach((v,t)=>el("rect",{x:rx+t*15.5,y:76+j*12.5,width:14,height:11,rx:2,fill:col("cnn"),"fill-opacity":(.06+.94*A_(v/mx)).toFixed(2)},gg)));
-    const pg=S(4,el("g",{},g));const mean=c2.map(r=>r.reduce((a,b)=>a+b,0)/24),lastv=c2.map(r=>r[23]),pm=Math.max(1e-6,...mean,...lastv);
-    T(pg,rx,296,"Average over the 24 hours",{size:12,color:css("--muted")});mean.forEach((v,j)=>el("rect",{x:rx+j*23,y:322-v/pm*22,width:18,height:Math.max(1,v/pm*22),rx:2,fill:col("cnn")},pg));
-    T(pg,rx,344,"Last hour only",{size:12,color:css("--muted")});lastv.forEach((v,j)=>el("rect",{x:rx+j*23,y:370-v/pm*22,width:18,height:Math.max(1,v/pm*22),rx:2,fill:col("cnn"),opacity:.7},pg));
+    const win=S(2,el("rect",{x:info.gx,y:info.gy-2,width:3*info.cw,height:6*14+3,rx:3,fill:"none",stroke:css("--amber"),"stroke-width":2.5},g));
+    link(g,418,150,rx-6,150,2);
+    const gg=S(2,el("g",{},g));T(gg,rx,66,"16 learned filters × 24 hours (brighter = pattern present)",{size:13,bold:true});
+    const c2=sn.int.cnn.c2,mx=Math.max(1e-6,...c2.flat()),cols=Array.from({length:24},()=>[]);
+    c2.forEach((row,j)=>row.forEach((v,t)=>{const b=.06+.94*A_(v/mx);cols[t].push({e:el("rect",{x:rx+t*15.5,y:76+j*11.5,width:14,height:10,rx:2,fill:col("cnn")},gg),b});}));
+    reg(2,p=>{const idx=p>=1?22:Math.round(p*21);win.setAttribute("x",info.gx+Math.min(idx,21)*info.cw);cols.forEach((cc,t)=>cc.forEach(o=>o.e.setAttribute("fill-opacity",(t<=idx+1||p>=1?o.b:0).toFixed(2))));});
+    const pg=S(3,el("g",{},g)),mean=c2.map(r=>r.reduce((a,b)=>a+b,0)/24),lastv=c2.map(r=>r[23]),pm=Math.max(1e-6,...mean,...lastv);
+    T(pg,rx,282,"Average over the 24 hours",{size:12,color:css("--muted")});T(pg,rx,334,"Last hour only",{size:12,color:css("--muted")});
+    const pb=[...mean.map((v,j)=>({e:el("rect",{x:rx+j*23,width:18,rx:2,fill:col("cnn")},pg),v,base:324})),...lastv.map((v,j)=>({e:el("rect",{x:rx+j*23,width:18,rx:2,fill:col("cnn"),opacity:.7},pg),v,base:376}))];
+    reg(3,p=>pb.forEach(b=>{const h=Math.max(1,b.v/pm*30*p);b.e.setAttribute("y",b.base-h);b.e.setAttribute("height",h);}));link(g,rx+176,388,rx+176,392,4);
   } else if(k==="tcn"){
     link(g,418,118,rx-6,118,2);
-    const lay=sn.int.tcn.layers,names=["input","gap 1 h","gap 2 h","gap 4 h","gap 8 h"],dil=[0,1,2,4,8];let reach=1;
-    lay.forEach((row,j)=>{const y=82+j*58,mx=Math.max(1e-6,...row.map(Math.abs));const gg=S(2,el("g",{},g));
+    const lay=sn.int.tcn.layers,names=["input","gap 1 h","gap 2 h","gap 4 h","gap 8 h"],dil=[0,1,2,4,8],rows=[],bands=[],taps=[];let reach=1;
+    lay.forEach((row,j)=>{const y=82+j*58,mx=Math.max(1e-6,...row.map(Math.abs)),gg=S(2,el("g",{},g));
       T(gg,rx-4,y+10,names[j],{anchor:"end",size:11,color:css("--muted")});
-      row.forEach((v,t)=>el("rect",{x:rx+4+t*14,y,width:12,height:13,rx:2,fill:col("tcn"),"fill-opacity":(.06+.94*A_(Math.abs(v)/mx)).toFixed(2)},gg));
+      row.forEach((v,t)=>el("rect",{x:rx+4+t*14,y,width:12,height:13,rx:2,fill:col("tcn"),"fill-opacity":(.06+.94*A_(Math.abs(v)/mx)).toFixed(2)},gg));rows.push(gg);
       if(j>0){reach+=4*dil[j];const R=Math.min(24,reach),bg=S(3,el("g",{},g));
-        el("rect",{x:rx+4+(24-R)*14,y:y+16,width:R*14,height:5,rx:2,fill:css("--amber")},bg);T(bg,rx+4+24*14+8,y+22,`sees ${R} h`,{size:11,bold:true,color:css("--amber")});
-        for(const dt of [0,dil[j],2*dil[j]])el("line",{x1:rx+4+23*14+6,y1:y+6,x2:rx+4+(23-dt)*14+6,y2:y-52,stroke:css("--amber"),"stroke-width":1.4,opacity:.7},gg);}});
+        const band=el("rect",{x:rx+4+(24-R)*14,y:y+16,width:R*14,height:5,rx:2,fill:css("--amber")},bg),lab=T(bg,rx+4+24*14+8,y+22,`sees ${R} h`,{size:11,bold:true,color:css("--amber")});bands.push({band,lab,R,x:rx+4+24*14});
+        for(const dt of [0,dil[j],2*dil[j]]){const x1=rx+4+23*14+6,y1=y+6,x2=rx+4+(23-dt)*14+6,y2=y-52,ln=el("line",{x1,y1,x2,y2,stroke:css("--amber"),"stroke-width":1.4,opacity:.7},bg);taps.push({ln,j,len:Math.hypot(x2-x1,y2-y1)});}}});
+    reg(2,p=>rows.forEach((gg,j)=>gg.setAttribute("opacity",clamp(p*5.5-j,0,1).toFixed(2))));
+    reg(3,p=>{bands.forEach((b,i)=>{const q=ease(clamp(p*1.6-i*.2,0,1)),w=b.R*14*q;b.band.setAttribute("x",b.x-w);b.band.setAttribute("width",Math.max(0,w));b.lab.setAttribute("opacity",q.toFixed(2));});
+      taps.forEach(t=>{const q=clamp(p*1.6-(t.j-1)*.2,0,1);t.ln.setAttribute("stroke-dasharray",t.len);t.ln.setAttribute("stroke-dashoffset",t.len*(1-q));});});
     link(g,rx+176,340,rx+176,382,4);
   } else {
     const hd=sn.int[k].att[state.layer],avg=hd[0].map((_,t)=>hd.reduce((a,h)=>a+h[t],0)/hd.length),amx=Math.max(...avg),amn=Math.min(...avg),cwid=info.cw;
     const sx=info.gx+12*cwid,sy=62,sb=S(1,el("g",{},g));el("rect",{x:sx-70,y:sy-26,width:140,height:34,rx:10,fill:css("--amber-soft"),stroke:col(k),"stroke-width":2},sb);T(sb,sx,sy-4,"summary token",{anchor:"middle",size:14,bold:true});
-    for(let t=0;t<24;t++){const tx=info.gx+t*cwid+6.5;
-      S(2,el("path",{d:`M${sx},${sy+8} C${sx},${(sy+gy)/2} ${tx},${(sy+gy)/2} ${tx},${gy-2}`,fill:"none",stroke:css("--amber"),"stroke-width":.9,opacity:.3},g));
-      const kk=clamp((avg[t]-amn)/(amx-amn||1),0,1);
-      S(3,el("path",{d:`M${sx},${sy+8} C${sx},${(sy+gy)/2} ${tx},${(sy+gy)/2} ${tx},${gy-2}`,fill:"none",stroke:col(k),"stroke-width":(.7+kk*8).toFixed(2),"stroke-linecap":"round",opacity:(.15+.8*kk).toFixed(2)},g));}
+    const thin=[],beam=[];
+    for(let t=0;t<24;t++){const tx=info.gx+t*cwid+6.5,d=`M${sx},${sy+8} C${sx},${(sy+gy)/2} ${tx},${(sy+gy)/2} ${tx},${gy-2}`,kk=clamp((avg[t]-amn)/(amx-amn||1),0,1);
+      const a=S(2,el("path",{d,fill:"none",stroke:css("--amber"),"stroke-width":.9,opacity:.35},g));thin.push({e:a,len:a.getTotalLength()});
+      const b=S(3,el("path",{d,fill:"none",stroke:col(k),"stroke-linecap":"round"},g));beam.push({e:b,kk});}
+    reg(2,p=>thin.forEach((o,i)=>{const q=clamp(p*1.5-i/24*.5,0,1);o.e.setAttribute("stroke-dasharray",o.len);o.e.setAttribute("stroke-dashoffset",o.len*(1-q));}));
+    reg(3,p=>beam.forEach(o=>{o.e.setAttribute("stroke-width",(.9+(.7+o.kk*8-.9)*p).toFixed(2));o.e.setAttribute("opacity",(.3+(.15+.8*o.kk-.3)*p).toFixed(2));}));
     const gg=S(3,el("g",{},g));T(gg,rx,66,`4 attention heads, layer ${state.layer+1} (each row looks at the hours differently)`,{size:13,bold:true});
-    hd.forEach((h,i)=>{const mxh=Math.max(...h);T(gg,rx-6,100+i*24+13,"head "+(i+1),{anchor:"end",size:11,color:css("--muted")});
-      h.forEach((v,t)=>el("rect",{x:rx+4+t*14.2,y:100+i*24,width:12.5,height:20,rx:2,fill:col(k),"fill-opacity":(.07+.93*A_(v/mxh)).toFixed(2)},gg));});
-    T(gg,rx+4,210,"23 h ago",{size:11,color:css("--muted")});T(gg,rx+4+24*14.2,210,"now",{size:11,color:css("--muted"),anchor:"end"});
-    T(gg,rx,242,"Average attention weight per hour",{size:13,bold:true});
-    avg.forEach((v,t)=>el("rect",{x:rx+4+t*14.2,y:322-v/amx*60,width:12.5,height:v/amx*60,rx:2,fill:col(k)},gg));
+    const hc=hd.map((h,i)=>{const mxh=Math.max(...h);T(gg,rx-6,100+i*24+13,"head "+(i+1),{anchor:"end",size:11,color:css("--muted")});
+      return h.map((v,t)=>({e:el("rect",{x:rx+4+t*14.2,y:100+i*24,width:12.5,height:20,rx:2,fill:col(k)},gg),b:.07+.93*A_(v/mxh)}));});
+    T(gg,rx+4,210,"23 h ago",{size:11,color:css("--muted")});T(gg,rx+4+24*14.2,210,"now",{size:11,color:css("--muted"),anchor:"end"});T(gg,rx,242,"Average attention weight per hour",{size:13,bold:true});
+    const ab=avg.map((v,t)=>({e:el("rect",{x:rx+4+t*14.2,width:12.5,rx:2,fill:col(k)},gg),h:v/amx*60}));
     el("line",{x1:rx+4,x2:rx+4+24*14.2,y1:322-(1/24)/amx*60,y2:322-(1/24)/amx*60,stroke:css("--ink"),"stroke-dasharray":"4 4"},gg);
     T(gg,rx+4+24*14.2+6,322-(1/24)/amx*60+4,"equal weights",{size:11,color:css("--muted")});
+    reg(3,p=>{hc.forEach((row,i)=>row.forEach((o,t)=>o.e.setAttribute("fill-opacity",(o.b*clamp(p*4-i-t/24,0,1)).toFixed(2))));ab.forEach(b=>{const h=b.h*p;b.e.setAttribute("y",322-h);b.e.setAttribute("height",Math.max(0,h));});});
+    link(g,rx+176,340,rx+176,382,4);
   }
-  ruler(g,sn,k,1,nA-(k==="nairas"?1:0),fin);
-  applyStage();
+  ruler(g,sn,k,1,nA-(k==="nairas"?1:0),nA);
+  applyStage(skip);
 }
 const fmtH=h=>h===0?"the current hour":`${h} h ago`;
 function topHours(att){return att.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>fmtH(23-x[1]));}
 function caption(k,st,sn){
   const p=k==="nairas"?sn.N:sn.preds[k],c=p-sn.N,sgn=v=>(v>=0?"+":"−")+f1(Math.abs(v));
-  const out=`Output: a correction of ${sgn(c)} µSv/h, so the estimate is ${sn.N} ${c>=0?"+":"−"} ${f1(Math.abs(c))} = ${f1(p)}. The aircraft measured ${sn.A} µSv/h (${f1(Math.abs(sn.A-p))} ${sn.A>p?"higher":"lower"}).`;
-  if(k==="nairas")return [`NAIRAS is a physics model. From the aircraft's altitude (${sn.alt} km), the magnetic shield (Rc ${sn.rc} GV) and conditions in space it computes the dose by tracing cosmic rays through the field and atmosphere.`,
-    `It contains no learning at all. Its estimate for this moment is ${sn.N} µSv/h. The 24-hour history on the left is not part of it.`,
+  const out=`Output: a correction of ${sgn(c)} µSv/h, so the estimate is ${f1(sn.N)} ${c>=0?"+":"−"} ${f1(Math.abs(c))} = ${f1(p)}. The aircraft measured ${sn.A} µSv/h (${f1(Math.abs(sn.A-p))} ${sn.A>p?"higher":"lower"}).`;
+  if(k==="nairas")return [`NAIRAS is a physics model. From the aircraft's altitude (${f1(sn.alt)} km), the magnetic shield (Rc ${f1(sn.rc)} GV) and conditions in space it computes the dose by tracing cosmic rays through the field and atmosphere.`,
+    `It contains no learning at all. Its estimate for this moment is ${f1(sn.N)} µSv/h. The 24-hour history on the left is not part of it.`,
     `The instrument measured ${sn.A} µSv/h, so NAIRAS is ${f1(Math.abs(sn.A-sn.N))} µSv/h too ${sn.A>sn.N?"low":"high"} here. The networks learn corrections like this one.`][st-1];
   if(k==="mlp")return [`Only the present goes in: 8 position and shield numbers, the 35 space-weather readings right now (the last column), and NAIRAS's estimate. The 23 earlier hours are ignored, so this model cannot see a storm that already happened.`,
     `128 artificial neurons mix those 44 numbers. Brighter dots are more active for this moment.`,`64 neurons combine the first layer's patterns into higher-level ones.`,out][st-1];
@@ -405,52 +527,69 @@ function caption(k,st,sn){
     return [`All 24 hours go in: 24 × 35 = 840 numbers, plus position and NAIRAS.`,
     `The numbers are unrolled into one long row and every position gets its own weight, so the network does not know that neighbouring hours are related. Here the most-used hour carries ${f1(mx*100)}% of the weight and the least-used ${f1(mn*100)}%: almost flat, no hour stands out.`,
     `64 neurons mix all 840 numbers. With ${M.flat.params.toLocaleString("en-US")} parameters and only a few hundred training flights, this network memorises instead of learning.`,out][st-1];}
-  if(k==="cnn")return [`The 24 hours go in as 24 columns of 35 readings.`,`A small filter looks at 3 hours at a time and slides along the history, learning patterns such as "Kp jumps" or "wind speed falls". 16 filters run in parallel.`,
-    `Each row is one filter's response across the 24 hours. Bright means its pattern is present in that hour.`,`The responses are averaged over time and combined with the last hour, the position and NAIRAS. ${out}`][st-1];
+  if(k==="cnn")return [`The 24 hours go in as 24 columns of 35 readings.`,`A small filter looks at 3 hours at a time and slides along the history, learning patterns such as "Kp jumps" or "wind speed falls". 16 filters run in parallel and fill in the map on the right.`,
+    `Each filter's response is averaged over the 24 hours, and its last-hour value is kept too.`,`These summaries are combined with the position and NAIRAS. ${out}`][st-1];
   if(k==="tcn")return [`The 24 hours go in.`,`Each layer looks further back by skipping hours: gaps of 1, 2, 4 and 8 hours. Layers only look backwards in time. Brightness shows how active each hour is in that layer.`,
     `So the last hour's node sees the previous 5 hours, then 13, then the whole 24 as layers stack: a long memory with few parameters (${M.tcn.params.toLocaleString("en-US")}).`,out][st-1];
-  const att=sn.int[k].att[state.layer];const avg=att[0].map((_,t)=>att.reduce((a,h)=>a+h[t],0)/att.length);
+  const att=sn.int[k].att[state.layer],avg=att[0].map((_,t)=>att.reduce((a,h)=>a+h[t],0)/att.length);
   const w=k==="trfw"?` This copy was trained to count errors on high-dose moments four times, so it tends to push predictions up.`:"";
   return [`Each hour becomes a token: its 35 readings turned into a small vector. A learned summary token at the top will collect what matters.`,
     `The summary token asks every hour: how relevant are you to the correction? At first every hour looks alike.`,
     `Softmax turns the scores into weights that add up to 1. Beam thickness is the real learned weight (layer ${state.layer+1}, averaged over 4 heads). For this moment it leans most on ${topHours(avg).join(" and ")}.`,
     `The summary is an attention-weighted blend of the hours, joined with the position and NAIRAS, and a small network turns it into the correction. ${out}${w}`][st-1];
 }
-
-/* =============== PLAY 3: poke =============== */
-const pk={s:4,k:7};
-function drawPoke(){
-  const svg=$("#pk");svg.innerHTML="";const x0=230,x1=850,vmax=26,V=v=>x0+v/vmax*(x1-x0),muted=css("--muted"),ink=css("--ink"),line=css("--line");
-  for(let v=0;v<=vmax;v+=5){el("line",{x1:V(v),x2:V(v),y1:40,y2:290,stroke:line},svg);T(svg,V(v),306,v,{anchor:"middle",size:11,color:muted,mono:true});}
-  T(svg,x1+4,322,"µSv/h",{anchor:"end",size:11,color:muted});
-  const A=SW.A,N=SW.N;
-  el("line",{x1:V(A),x2:V(A),y1:34,y2:292,stroke:ink,"stroke-width":2.5},svg);T(svg,V(A),24,`measured ${A}`,{anchor:"middle",size:13,bold:true});
-  el("line",{x1:V(N),x2:V(N),y1:34,y2:292,stroke:col("nairas"),"stroke-width":2,"stroke-dasharray":"6 5"},svg);T(svg,V(N),24,`NAIRAS ${N}`,{anchor:"end",size:13,bold:true,color:col("nairas")});
-  NETS.forEach((k,i)=>{const y=62+i*40,g=SW.grid[k],all=g.flat(),lo=Math.min(...all),hi=Math.max(...all),v=g[pk.s][pk.k];
-    T(svg,x0-14,y+5,M[k].label,{anchor:"end",size:14});
-    el("rect",{x:V(lo),y:y-8,width:Math.max(3,V(hi)-V(lo)),height:16,rx:8,fill:col(k),opacity:.2},svg);
-    el("line",{x1:V(N),x2:V(v),y1:y,y2:y,stroke:col(k),"stroke-width":3,opacity:.5},svg);
-    el("circle",{cx:V(v),cy:y,r:8,fill:col(k),stroke:css("--panel"),"stroke-width":2},svg);T(svg,V(v)+13,y+5,f1(v),{size:13,bold:true,mono:true,color:col(k)});});
-  const spans=NETS.map(k=>{const a=SW.grid[k].flat();return Math.max(...a)-Math.min(...a);}),gap=A-Math.max(...NETS.map(k=>Math.max(...SW.grid[k].flat())));
-  $("#pk-take").innerHTML=`Pale bars show each model's whole range across all 56 settings. The widest is ${f1(Math.max(...spans))} µSv/h, yet the measured dose is ${f1(gap)} µSv/h above even the highest prediction any model gave. The MLP never moves because it only sees the present; the others react a little, but none turns a quiet-looking input into a high dose. This moment is mostly noise and instrument effects, not something the past 24 hours can explain.`;
-  $("#sSo").textContent=`${Math.round(SW.s[pk.s]*100)}%`;$("#sKo").textContent=`${SW.k[pk.k]} h`;
+function drawCmp(){
+  const svg=$("#cmp");svg.innerHTML="";const x0=230,x1=850,vmax=Math.max(26,Math.ceil(Math.max(VM.A,...NETS.map(k=>VM.preds[k]))/2)*2+2),V=v=>x0+v/vmax*(x1-x0),muted=css("--muted"),ink=css("--ink"),line=css("--line");
+  for(let v=0;v<=vmax;v+=5){el("line",{x1:V(v),x2:V(v),y1:36,y2:262,stroke:line},svg);T(svg,V(v),278,v,{anchor:"middle",size:11,color:muted,mono:true});}
+  T(svg,x1+4,294,"µSv/h",{anchor:"end",size:11,color:muted});
+  el("line",{x1:V(VM.A),x2:V(VM.A),y1:30,y2:264,stroke:ink,"stroke-width":2.5},svg);T(svg,V(VM.A),22,`measured ${VM.A}`,{anchor:"middle",size:13,bold:true});
+  el("line",{x1:V(VM.N),x2:V(VM.N),y1:30,y2:264,stroke:col("nairas"),"stroke-width":2,"stroke-dasharray":"6 5"},svg);T(svg,V(VM.N),22,`NAIRAS ${f1(VM.N)}`,{anchor:"end",size:13,bold:true,color:col("nairas")});
+  NETS.forEach((k,i)=>{const y=56+i*36,v=VM.preds[k];
+    T(svg,x0-14,y+5,M[k].label,{anchor:"end",size:k===state.model?15:14,bold:k===state.model});
+    el("line",{x1:V(VM.N),x2:V(v),y1:y,y2:y,stroke:col(k),"stroke-width":3,opacity:.5},svg);
+    el("circle",{cx:V(v),cy:y,r:k===state.model?9:7,fill:col(k),stroke:css("--panel"),"stroke-width":2},svg);T(svg,V(v)+14,y+5,f1(v),{size:13,bold:true,mono:true,color:col(k)});});
+  const best=NETS.reduce((a,k)=>Math.abs(VM.preds[k]-VM.A)<Math.abs(VM.preds[a]-VM.A)?k:a,NETS[0]);
+  $("#cmp-take").textContent=`NAIRAS says ${f1(VM.N)}; measured ${VM.A}. Closest network here: ${M[best].label} (${f1(VM.preds[best])}). Drag the sliders above and watch the dots move: they are the networks re-running on your edited inputs.`;
 }
-$("#sS").oninput=e=>{pk.s=+e.target.value;drawPoke();};$("#sK").oninput=e=>{pk.k=+e.target.value;drawPoke();};
-let sweepT=null;
-function sweep(key,max){clearInterval(sweepT);let i=0;pk[key]=0;$(key==="k"?"#sK":"#sS").value=0;drawPoke();
-  sweepT=setInterval(()=>{i++;if(i>max){clearInterval(sweepT);return;}pk[key]=i;$(key==="k"?"#sK":"#sS").value=i;drawPoke();},reduce?400:650);}
-$("#sweepK").onclick=()=>{pk.s=4;$("#sS").value=4;sweep("k",SW.k.length-1);};
-$("#sweepS").onclick=()=>{pk.k=7;$("#sK").value=7;sweep("s",SW.s.length-1);};
 
-/* =============== PLAY 4: guess =============== */
+/* =============== meet the models =============== */
+const INFO={
+  nairas:{full:"Physics model",plain:"A physics simulation. It works out the dose from where the aircraft is and conditions in space. No learning.",think:"A weather forecast made from equations.",sees:"its own physics inputs"},
+  mlp:{full:"Multi-Layer Perceptron",plain:"A small stack of layers of simple neurons that mixes numbers together. It only gets the present moment.",think:"A calculator that only looks at right now.",sees:"position, shield, and the 35 readings right now"},
+  flat:{full:"MLP fed the whole history",plain:"The same kind of network, but handed all 24 hours as one long list of 840 numbers.",think:"Reading a table by position number, without knowing which cells are neighbours.",sees:"all 24 hours, with no sense of order"},
+  cnn:{full:"Convolutional network + MLP",plain:"A small filter slides along the 24 hours looking for local patterns, like a jump in Kp, wherever they occur.",think:"A magnifying glass sliding along a timeline.",sees:"all 24 hours, 3 hours at a time"},
+  tcn:{full:"Temporal Convolutional Network",plain:"Like the CNN, but its filters skip hours (1, 2, 4, 8) so it can look far back cheaply.",think:"Listening for patterns at several time-scales at once.",sees:"all 24 hours, short and long gaps"},
+  trf:{full:"Transformer (attention)",plain:"Each hour is a token. A summary token asks every hour how much it matters (attention) and blends them.",think:"A reader who underlines the important hours.",sees:"all 24 hours, choosing which matter"},
+  trfw:{full:"Transformer, trained to care about danger",plain:"The same Transformer, but mistakes on dangerous high-dose moments count four times in training.",think:"A student told the hard questions count more.",sees:"like the Transformer, tuned for high doses"}};
+function mini(key){
+  const svg=el("svg",{viewBox:"0 0 200 64",role:"img","aria-label":"Sketch of how "+M[key].label+" reads the 24 hours"},null),amber=css("--amber"),kp=VM.kp;
+  const bx=t=>4+t*8;
+  for(let t=0;t<24;t++)el("rect",{x:bx(t),y:38,width:6,height:14,rx:1.5,fill:kp[t]>=5?css("--red"):css("--gray"),opacity:key==="mlp"?(t===23?1:.2):key==="nairas"?.2:.85},svg);
+  const c=col(key);
+  if(key==="nairas"){T(svg,100,22,"equations, no learning",{anchor:"middle",size:12,color:css("--muted")});}
+  if(key==="mlp"){for(let i=0;i<5;i++)el("circle",{cx:150+i*5,cy:14,r:2.6,fill:c},svg);el("path",{d:"M190,38 C190,28 170,26 168,18",fill:"none",stroke:c,"stroke-width":1.5},svg);T(svg,8,20,"only 'now'",{size:11,color:css("--muted")});}
+  if(key==="flat"){el("rect",{x:4,y:58,width:192,height:4,rx:2,fill:c},svg);for(let t=0;t<24;t++)el("line",{x1:bx(t)+3,x2:bx(t)+3,y1:52,y2:58,stroke:c},svg);T(svg,8,20,"one long list",{size:11,color:css("--muted")});}
+  if(key==="cnn"){el("rect",{class:"mini-win",x:3,y:35,width:26,height:20,rx:3,fill:"none",stroke:amber,"stroke-width":2},svg);T(svg,8,20,"3-hour filter slides",{size:11,color:css("--muted")});}
+  if(key==="tcn"){[1,2,4,8].forEach((d,i)=>el("path",{d:`M${bx(23)+3},38 Q${(bx(23)+bx(23-d))/2+3},${20-i*3} ${bx(23-d)+3},38`,fill:"none",stroke:c,"stroke-width":1.5},svg));T(svg,8,20,"skips 1, 2, 4, 8 h",{size:11,color:css("--muted")});}
+  if(key==="trf"||key==="trfw"){const av=VM.int[key].att[0],a=av[0].map((_,t)=>av.reduce((s,h)=>s+h[t],0)/av.length),mx=Math.max(...a),mn=Math.min(...a);
+    el("circle",{cx:100,cy:8,r:5,fill:c},svg);for(let t=0;t<24;t++){const k=(a[t]-mn)/(mx-mn||1);el("path",{d:`M100,13 C100,26 ${bx(t)+3},26 ${bx(t)+3},37`,fill:"none",stroke:c,"stroke-width":(.5+k*3.2).toFixed(2),opacity:(.25+.7*k).toFixed(2)},svg);}}
+  return svg;}
+function buildCards(){const host=$("#models");host.innerHTML="";KEYS.forEach(k=>{const i=INFO[k],card=H("article",{class:"mcard"});
+  card.innerHTML=`<h3><i style="background:${col(k)}"></i>${M[k].label}</h3><div class="full">${i.full}</div>`;card.appendChild(mini(k));
+  card.appendChild(H("div",{},`<span class="k">In plain words:</span> ${i.plain}`));card.appendChild(H("div",{},`<span class="k">Think of it as:</span> ${i.think}`));
+  card.appendChild(H("div",{class:"pp"},`Sees: ${i.sees} · ${k==="nairas"?"no learned parameters":M[k].params.toLocaleString("en-US")+" parameters"}`));
+  const b=H("button",{class:"pri"},"Run it ▸");b.onclick=()=>pickModel(k,true);card.appendChild(b);host.appendChild(card);});}
+
+/* =============== PLAY 3: guess =============== */
 const G={order:[],ix:0,locked:false,you:0,rounds:0,m:Object.fromEntries(KEYS.map(k=>[k,0]))};
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function snapKp(s){return s.zs.map(r=>clamp((r[KPI]*SC.seq_sd[KPI]+SC.seq_mu[KPI])/10,0,9));}
 function newRound(){if(G.ix>=G.order.length){G.order=shuffle(SN.map((_,i)=>i));G.ix=0;}
   G.cur=SN[G.order[G.ix]];G.locked=false;const s=G.cur;
   $("#facts").innerHTML=[["altitude",`${s.alt} km`],["shield Rc",`${s.rc} GV`],["position",`${s.lat}°, ${s.lon}°`],["NAIRAS says",`${s.N} µSv/h`]].map(([a,b])=>`<div><b>${b}</b><span>${a}</span></div>`).join("");
   const gk=$("#gk");gk.innerHTML="";T(gk,0,12,"Kp storm index over the past 24 hours (red = storm)",{size:12,color:css("--muted")});
-  s.kp.forEach((k,t)=>el("rect",{x:t*17.2+2,y:80-k/9*58,width:13,height:Math.max(1,k/9*58),rx:2,fill:k>=5?css("--red"):css("--gray")},gk));
-  $("#res").innerHTML='<p class="note">Lock in a guess to see the measured dose and how everyone did.</p>';$("#guess").value=12;$("#guessO").textContent=f1(+$("#guess").value)+" µSv/h";}
+  snapKp(s).forEach((k,t)=>el("rect",{x:t*17.2+2,y:80-k/9*58,width:13,height:Math.max(1,k/9*58),rx:2,fill:k>=5?css("--red"):css("--gray")},gk));
+  $("#res").innerHTML='<p class="note">Lock in a guess to see the measured dose and how everyone did.</p>';$("#guess").value=12;$("#guessO").textContent="12.0 µSv/h";}
 $("#guess").oninput=e=>{$("#guessO").textContent=f1(+e.target.value)+" µSv/h";};
 $("#lock").onclick=()=>{if(G.locked)return;G.locked=true;const s=G.cur,g=+$("#guess").value;
   const rows=[{k:"you",label:"You",v:g,c:css("--ink")},{k:"nairas",label:"NAIRAS V3",v:s.N,c:col("nairas")},...NETS.map(k=>({k,label:M[k].label,v:s.preds[k],c:col(k)}))];
@@ -462,8 +601,10 @@ $("#lock").onclick=()=>{if(G.locked)return;G.locked=true;const s=G.cur,g=+$("#gu
 $("#next").onclick=()=>{G.ix++;newRound();};
 
 /* =============== boot =============== */
-function all(){buildTL();buildChips();buildTabs();buildStageChips();buildScene();drawPoke();newRound();}
+function all(){rebuildVM();buildTL();buildChips();buildTabs();buildStageChips();buildScene(true);drawCmp();editLabels();buildCards();newRound();}
+if(reduce){$("#motionNote").hidden=false;$("#animtoggle").textContent="Animation: off";$("#animtoggle").setAttribute("aria-pressed","false");}
+$("#eA").value=SN[state.snap].alt;$("#eR").value=SN[state.snap].rc;
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",all);
 all();
-if(!reduce)setTimeout(()=>{setPlay(true);},700);
+if(!reduce)setTimeout(()=>setPlay(true),900);
 </script>
