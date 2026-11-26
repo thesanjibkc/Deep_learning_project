@@ -1,0 +1,61 @@
+== 1H width=16 dropout=0.3 wd=0.01 curfull=0
+  FlatMLP (residual)         val 3.803  epochs  14     3.0s
+  CNN-MLP (residual)         val 3.630  epochs  15     4.3s
+  TCN (residual)             val 3.674  epochs  17    11.0s
+  Transformer (residual)     val 3.620  epochs  19    28.0s
+  Transformer (direct)       val 3.646  epochs  23    26.3s
+== 5M width=16 dropout=0.3 wd=0.01 curfull=0
+  FlatMLP (residual)         val 3.838  epochs  25     3.3s
+  CNN-MLP (residual)         val 3.668  epochs  14     3.0s
+  TCN (residual)             val 3.699  epochs  16     6.7s
+  Transformer (residual)     val 3.619  epochs  24    21.2s
+  Transformer (direct)       val 3.667  epochs  17    14.4s
+== 1H width=32 dropout=0.3 wd=0.01 curfull=0
+  FlatMLP (residual)         val 3.849  epochs  11     1.9s
+  CNN-MLP (residual)         val 3.662  epochs  14     3.8s
+  TCN (residual)             val 3.654  epochs  14    12.6s
+  Transformer (residual)     val 3.635  epochs  21    37.2s
+  Transformer (direct)       val 3.724  epochs  21    34.5s
+== 5M width=32 dropout=0.3 wd=0.01 curfull=0
+  FlatMLP (residual)         val 3.865  epochs  12     2.0s
+  CNN-MLP (residual)         val 3.694  epochs  17     3.7s
+  TCN (residual)             val 3.742  epochs  15     7.3s
+  Transformer (residual)     val 3.649  epochs  21    22.2s
+  Transformer (direct)       val 3.684  epochs  22    22.6s
+== 1H width=16 dropout=0.3 wd=0.01 curfull=1
+  FlatMLP (residual)         val 3.810  epochs  12     1.8s
+  CNN-MLP (residual)         val 3.749  epochs  15     3.3s
+  TCN (residual)             val 3.758  epochs  22    12.4s
+  Transformer (residual)     val 3.757  epochs  16    18.4s
+  Transformer (direct)       val 3.727  epochs  21    24.0s
+== 5M width=16 dropout=0.3 wd=0.01 curfull=1
+  FlatMLP (residual)         val 3.821  epochs  25     3.3s
+  CNN-MLP (residual)         val 3.745  epochs  16     3.4s
+  TCN (residual)             val 3.776  epochs  23     9.7s
+  Transformer (residual)     val 3.757  epochs  21    17.9s
+  Transformer (direct)       val 3.762  epochs  24    20.4s
+== 1H width=32 dropout=0.3 wd=0.01 curfull=1
+  FlatMLP (residual)         val 3.810  epochs  15     2.5s
+  CNN-MLP (residual)         val 3.746  epochs  20     5.0s
+  TCN (residual)             val 3.779  epochs  17    14.5s
+  Transformer (residual)     val 3.687  epochs  23    37.7s
+  Transformer (direct)       val 3.730  epochs  25    41.0s
+== 5M width=32 dropout=0.3 wd=0.01 curfull=1
+  FlatMLP (residual)         val 3.882  epochs  20     2.9s
+  CNN-MLP (residual)         val 3.799  epochs  20     4.2s
+  TCN (residual)             val 3.823  epochs  21    10.1s
+  Transformer (residual)     val 3.783  epochs  22    22.6s
+  Transformer (direct)       val 3.884  epochs  21    21.4s
+== 1H width=64 dropout=0.3 wd=0.01 curfull=1
+  FlatMLP (residual)         val 3.831  epochs  14     2.6s
+  CNN-MLP (residual)         val 3.756  epochs  14     4.9s
+  TCN (residual)             val 3.749  epochs  21    34.2s
+  Transformer (residual)     val 3.708  epochs  25    62.4s
+  Transformer (direct)       val 3.806  epochs  20    50.0s
+== 5M width=64 dropout=0.3 wd=0.01 curfull=1
+  FlatMLP (residual)         val 3.889  epochs  16     2.5s
+  CNN-MLP (residual)         val 3.837  epochs  14     5.2s
+  TCN (residual)             val 3.817  epochs  15    16.1s
+  Transformer (residual)     val 3.826  epochs  21    33.5s
+  Transformer (direct)       val 4.043  epochs  30    47.0s
+DONE

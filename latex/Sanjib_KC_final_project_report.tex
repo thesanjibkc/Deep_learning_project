@@ -45,8 +45,11 @@ high doses. We train a Transformer to learn a correction to NAIRAS from the
 aircraft's location and the recent history of solar and geomagnetic
 conditions, compare it with static machine-learning and convolutional
 baselines, and use attention and attribution to identify which conditions and
-time lags drive the correction. \tbd{one sentence with the main quantitative
-result.}
+time lags drive the correction. Over 18 runs on unseen flights, temporal
+networks reduce error by 9.5\% relative to NAIRAS, significantly more than a
+network without history and on par with the best static model, and a
+high-dose-weighted Transformer reduces error above 15~$\mu$Sv/h by 19\% at no
+overall cost.
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
@@ -110,22 +113,32 @@ weather and highlights scarce data and rare extreme events. Sadykov
 ARMAS and NAIRAS with flight position, neutron-monitor counts, solar-wind
 parameters, particle fluxes, and geomagnetic indices. Our earlier
 work~\cite{kc2025} used the current-time conditions to correct NAIRAS; it
-serves as our static baseline. Here we model the preceding history explicitly.
+serves as our static baseline. Wang \etal~\cite{wang2024} train a neural
+network to reproduce simulated dose rapidly, whereas we correct a physics model
+against measurements. Sequence models fed with solar-wind history already
+forecast geomagnetic indices, using LSTMs~\cite{gruet2018}, convolutional and
+recurrent layers~\cite{collado2021}, and Transformers~\cite{abduallah2024}; we
+apply the same idea to the dose itself.
 
 \textbf{Physics-guided learning.}
-Theory-guided data science~\cite{karpatne2017} argues that combining physical
-models with learning improves generalization over either alone. Learning the
-residual of a physics model is a simple instance of this idea; we test it
+Theory-guided data science~\cite{karpatne2017} and later
+reviews~\cite{willard2022,reichstein2019} argue that combining physical models
+with learning improves generalization over either alone. Physics-informed
+networks~\cite{raissi2019,karniadakis2021} place physics in the loss; we
+instead place it in the output, learning the residual of NAIRAS, and test this
 against direct prediction with otherwise identical networks.
 
 \textbf{Temporal models and imbalanced targets.}
 Temporal convolutional networks~\cite{bai2018} and
 Transformers~\cite{vaswani2017,lim2021} model multivariate sequences, and
-attention weights can expose which time steps a prediction uses. Unlike
+attention weights can expose which time steps a prediction uses, although
+whether attention explains a prediction is debated~\cite{jain2019,wiegreffe2019},
+so we compare it with integrated gradients~\cite{sundararajan2017}. Unlike
 long-horizon forecasting, our sequences are short and strongly
 autocorrelated, so whether attention helps is an empirical question. For
 skewed targets, Yang \etal~\cite{yang2021} show that standard losses
-underperform in sparse target regions; we use a threshold-weighted Huber
+underperform in sparse target regions, and Ribeiro and
+Moniz~\cite{ribeiro2020} propose metrics for extreme values; we use a threshold-weighted Huber
 loss~\cite{huber1964} because the high-dose threshold is defined
 operationally.
 
@@ -254,8 +267,13 @@ shielding and altitude ($R_c<1$~GV, 10.5--12~km) and only days with at least
 solar-modulation response, whereas ARMAS shows almost no dependence
 ($r=-0.10$ with neutron-monitor counts; 0.06~$\mu$Sv/h per 100 sunspots).
 With only 43 matched flight-days we report this difference without
-attributing it to either the model or the instrument.
-\tbd{confirm with larger matched sample.}
+attributing it to either the model or the instrument. An active Sun can also raise the dose through solar energetic particle
+(SEP) events, most strongly in ground-level enhancements (GLEs). The dataset
+contains no such exposure: during the September 2017 SEP event the aircraft
+flew at $R_c=3$--10~GV, where the geomagnetic field blocks solar protons, and
+the only polar flight during an SEP alert (March 2023) coincided with a weak
+event with negligible $>$100~MeV flux. The models therefore learn
+galactic-cosmic-ray conditions only.
 
 \textbf{Measurement characteristics.}
 In 56\% of consecutive records the ARMAS value is unchanged, so neighboring
@@ -279,8 +297,9 @@ and are nearly constant across lags. In contrast, Kp and Ap are more strongly
 associated with the error about 15~h before the observation
 ($\rho\approx0.12$) than at the observation time ($\rho\approx0.04$). These
 associations are weak individually, but they suggest that geomagnetic
-activity acts on the error with a delay of hours, which a 24-hour history can
-capture and a 1-hour history cannot.
+activity acts on the error with a delay of hours, which only a 24-hour
+history can represent; Sec.~\ref{sec:attention} tests whether the
+networks use it.
 
 \subsection{Physics-Guided Residual Formulation}
 Let $X_i\in\mathbb{R}^{T\times35}$ be the environmental history ($T=12$ or
@@ -303,20 +322,28 @@ encoding, and self-attention lets every step weigh every other,
 \label{eq:attention}
 \end{equation}
 where $Q$, $K$, and $V$ are learned linear projections of the embeddings.
-\tbd{architecture details, diagram, parameter counts.}
+Attention (Eq.~\eqref{eq:attention}) operates on tokens. Each hour (or 5-minute step) is one token: its 35 standardized values are
+projected to $d=16$ dimensions and given a learned position embedding. A
+learned summary token is prepended, two pre-normalized encoder blocks with
+four heads are applied, and the summary token's output is concatenated with
+an embedding of the eight static variables and $N_i$ before a small output
+network predicts $r_i$ (8,993 parameters). Heavy-tailed X-ray and particle
+fluxes are log-transformed before standardization.
 
 \subsection{Baselines}
 The baselines form a ladder in which each model adds one idea, so that each
-gain can be attributed. They are NAIRAS V3; a linear (ridge) residual
-correction; the static tree ensembles of K C \etal~\cite{kc2025}; a
-current-time MLP; a 1D-CNN and a hybrid CNN--MLP on the history; a
-TCN~\cite{bai2018}; and a direct Transformer that predicts $A$ without
-NAIRAS. On the static version of the dataset, the best static model of
+gain can be attributed. They are NAIRAS V3; the static models of K C
+\etal~\cite{kc2025}, quoted from that study; a current-time MLP (43 inputs,
+128 and 64 hidden units, 14,081 parameters); a Flat MLP that receives the
+whole history as one 840-value vector (56,513 parameters); a hybrid CNN--MLP
+with two convolutions over time (7,025); a causal dilated TCN~\cite{bai2018}
+(10,369); and a direct Transformer that predicts $A$ without NAIRAS. Every
+model except the direct ones learns the residual of Eq.~\eqref{eq:residual}. On the static version of the dataset, the best static model of
 \cite{kc2025}, XGBoost, reached a test RMSE of $3.671\pm0.061$~$\mu$Sv/h
 against $4.045\pm0.087$ for NAIRAS, a 9.3\% reduction, with random forest
 ($3.725\pm0.067$) and LASSO ($3.853\pm0.077$) behind it (mean $\pm$ standard
 deviation over partition rotations). That study did not report high-dose
-errors, which we add here. \tbd{final list and sizes.}
+errors, which we add here.
 
 \subsection{Training Objective}
 All networks minimize a weighted Huber loss~\cite{huber1964},
@@ -327,7 +354,13 @@ w_i = \begin{cases} w, & A_i > 15,\\ 1, & \text{otherwise,}\end{cases}
 \label{eq:huber}
 \end{equation}
 where $\ell_\delta$ is the Huber function and $y_i$ the standardized target.
-The weight $w$ is selected on validation data. \tbd{optimizer settings.}
+Standard models use $w=1$ and a squared loss; the high-dose variant uses
+Eq.~\eqref{eq:huber} with $w=4$. All networks use AdamW (learning rate $10^{-3}$,
+$5\times10^{-4}$ for Transformers), weight decay 0.01, dropout 0.3, batch
+size 512, gradient clipping at 1.0, and early stopping on validation RMSE
+with patience 10. Width, dropout, and weight decay were chosen on the
+validation partition of one assignment only (P1 train, P2 validation): a
+first pass with 4--8 times more parameters overfit within 2--7 epochs.
 
 \section{Experiments and Results}
 \label{sec:experiments}
@@ -345,46 +378,145 @@ are available at
 \url{https://github.com/thesanjibkc/Deep_learning_project/tree/final-project}.
 
 \subsection{Main Results}
-Table~\ref{tab:results} reports test errors averaged over all six
-train--validation--test assignments of the three partitions and three random
-seeds. Using only the 43 current-time features, the residual MLP reduces RMSE
-by 7.6\% overall and 7.8\% above 15~$\mu$Sv/h relative to NAIRAS, while the
-direct MLP gains 5.0\% and 3.2\%. Learning the correction is also more
-stable: its standard deviation is 0.032 versus 0.096 for the direct MLP,
-whose worst assignment (P2 train, P1 validation, P3 test) is no better than
-NAIRAS. Neither MLP matches the static XGBoost of~\cite{kc2025}, which used
-the same current-time information. \tbd{temporal models.}
+Table~\ref{tab:results} reports test errors over the 18 runs. All networks
+beat NAIRAS. Learning the correction is better than learning the dose
+directly for both the MLP and the Transformer (paired flight bootstrap,
+Table~\ref{tab:ablation}). With the 24-hour history, the TCN, CNN--MLP, and
+Transformer reach 3.66--3.67~$\mu$Sv/h, a 9.5\% reduction from NAIRAS that
+is significantly better than the current-time MLP (3.737; difference
+$-0.07$, 95\% interval $[-0.10,-0.04]$, better in all six assignments).
+Averaging the three seeds' predictions lowers the error further to
+3.63--3.64. These values match the static XGBoost of~\cite{kc2025} (3.671),
+which was evaluated on the static data with its own protocol, so we do not
+claim a difference. The Flat MLP, which sees the same history as one vector,
+is significantly worse than every structured temporal model (3.91), showing
+that how the history is read matters more than having it.
+
+\textbf{High doses.} Above 15~$\mu$Sv/h, the unweighted networks gain only
+8--10\%. Weighting high-dose errors four times reduces the high-dose RMSE to
+5.56 (1-hour) and 5.66 (24-hour), a 19\% reduction from NAIRAS. The
+seed-ensembled weighted Transformer matches the current-time MLP overall
+(difference $+0.001$, interval $[-0.04,0.05]$) while lowering high-dose RMSE
+by 0.78~$\mu$Sv/h (interval $[-0.89,-0.67]$, all six assignments).
 
 \begin{table}[t]
-\caption{Test RMSE ($\mu$Sv/h, lower is better) as mean $\pm$ standard
-deviation over the six train--validation--test assignments of P1, P2, and
-P3 and three seeds (18 runs). ``All'' covers every test observation and $A>15$ the
-high-dose subset. Gain is the reduction in mean RMSE relative to NAIRAS V3.
-XGBoost is quoted from~\cite{kc2025} (static data; high-dose error not
-reported).}
+\caption{Test RMSE ($\mu$Sv/h, lower is better), mean $\pm$ standard
+deviation over 18 runs (six train--validation--test assignments of P1--P3
+$\times$ three seeds), for all observations and the high-dose subset
+$A>15$. Gain is the reduction relative to NAIRAS V3, overall / high dose.
+All networks except ``direct'' learn the NAIRAS residual. XGBoost is quoted
+from~\cite{kc2025} (static data; high-dose error not reported).}
 \label{tab:results}
 \centering\small
-\begin{tabular}{lccr}\toprule
-Model & All & $A>15$ & Gain all / $A>15$ (\%) \\ \midrule
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccc}\toprule
+Model & All & $A>15$ & Gain (\%) \\ \midrule
 NAIRAS V3 & $4.044\pm0.040$ & $6.845\pm0.277$ & -- \\
-XGBoost~\cite{kc2025} & $3.671\pm0.061$ & -- & 9.3 \\
+XGBoost, static~\cite{kc2025} & $3.671\pm0.061$ & -- & 9.3 / -- \\ \midrule
 MLP, direct & $3.842\pm0.096$ & $6.627\pm0.203$ & 5.0 / 3.2 \\
-MLP, residual & $3.737\pm0.032$ & $6.311\pm0.168$ & 7.6 / 7.8 \\
+MLP & $3.737\pm0.032$ & $6.311\pm0.168$ & 7.6 / 7.8 \\ \midrule
+Flat MLP, 24\,h & $3.906\pm0.070$ & $6.731\pm0.264$ & 3.4 / 1.7 \\
+CNN--MLP, 24\,h & $3.661\pm0.043$ & $6.212\pm0.261$ & 9.5 / 9.2 \\
+TCN, 24\,h & $\mathbf{3.659}\pm0.029$ & $6.173\pm0.193$ & 9.5 / 9.8 \\
+Transformer, direct, 24\,h & $3.712\pm0.054$ & $6.417\pm0.230$ & 8.2 / 6.3 \\
+Transformer, 24\,h & $3.667\pm0.034$ & $6.309\pm0.148$ & 9.3 / 7.8 \\
+Transformer, 1\,h & $3.663\pm0.039$ & $6.261\pm0.125$ & 9.4 / 8.5 \\
+Transformer, 1\,h, $w=4$ & $3.762\pm0.080$ & $\mathbf{5.563}\pm0.233$ & 7.0 / 18.7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Ablations as paired differences in test RMSE ($\mu$Sv/h; negative
+means the first model is better), from a bootstrap that resamples whole
+flights within each assignment (1,000 draws), using seed-ensembled
+predictions and averaging over the six assignments. Brackets give 95\%
+intervals; bold marks intervals that exclude zero.}
+\label{tab:ablation}
+\centering\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcc}\toprule
+Comparison (what changes) & All & $A>15$ \\ \midrule
+Residual vs direct MLP (physics baseline) & $\mathbf{-0.07}$ & $\mathbf{-0.30}$ \\
+Transformer 24\,h vs MLP (history) & $\mathbf{-0.07}$ & $0.00$ \\
+TCN 24\,h vs MLP (history) & $\mathbf{-0.07}$ & $\mathbf{-0.14}$ \\
+Transformer vs Flat MLP, 24\,h (structure) & $\mathbf{-0.24}$ & $\mathbf{-0.43}$ \\
+Transformer 24\,h vs 1\,h (window) & $+0.01$ & $+0.05$ \\
+Weighted vs unweighted Transformer, 24\,h & $\mathbf{+0.07}$ & $\mathbf{-0.67}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{1-Hour versus 24-Hour History}
-\tbd{error versus history length.}
+After regularization, the 1-hour and 24-hour histories give the same average
+error for every architecture (Table~\ref{tab:results}; Transformer difference
+$+0.01$, interval $[-0.01,0.03]$). Before regularization the larger
+24-hour models overfit and looked worse or better depending on the
+architecture, which shows how easily an uncontrolled comparison misleads.
+Because 16 of the 35 variables are constant within an hour and storms are
+rare, the extra 23 hours change few predictions, so the average is
+unchanged even when individual storm flights benefit
+(Sec.~\ref{sec:attention}).
 
-\subsection{Attention and Attribution}
-\tbd{attention maps and integrated gradients~\cite{sundararajan2017}.}
+\subsection{What the Correction Uses and What Remains}
+\label{sec:attention}
+\textbf{Feature importance.} Shuffling one feature group across test flights
+(permutation importance, six assignments) raises the Transformer's RMSE most
+for altitude ($+0.74$), geomagnetic shielding ($+0.65$), and neutron-monitor
+counts ($+0.32$); solar wind, Kp/ap/Dst, and X-ray fluxes each add at most
+$0.03$. Shuffling any single hour changes the error by less than
+0.03~$\mu$Sv/h, because neighboring hours are redundant.
+
+\textbf{Attention on a storm.} We followed training epoch by epoch for one
+flight on 9 September 2017, the morning after a severe geomagnetic storm.
+Attention starts uniform and, without any label for storms, concentrates on
+the hours 16--18~h before the flight, where Kp peaked at 8.3
+(Fig.~\ref{fig:attention}); at the same time the Flat MLP spreads its weight
+evenly and begins to memorize after four epochs. This agrees with the
+lead--lag analysis of Sec.~\ref{sec:eda}, but it is one flight and one run,
+and attention indicates what the model used rather than a physical
+cause~\cite{jain2019,wiegreffe2019}.
+
+\textbf{What remains.} The NAIRAS error depends on shielding, altitude, and
+storm level; after the Transformer's correction these groupings each explain
+less than 1\% of the remaining error variance. About 81\% of the remaining
+variance lies within individual flights, from minute to minute, where the
+space-weather inputs barely change, and 4--7\% is associated with the
+aircraft, which is never an input, against a 3\% chance level. Measurement
+variability and instrument differences therefore bound the accuracy reachable
+from these inputs.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{T1_training_evolution.png}
+\caption{Training dynamics with the 24-hour history (P1 train, P2
+validation, one seed). (a) Training (dashed) and validation (solid) RMSE:
+the Flat MLP memorizes while the Transformer improves until epoch 11.
+(b) Transformer attention over the 24 hours for the 9 September 2017 flight
+at every epoch. (c) Attention at the best epoch against Kp: the weight
+concentrates where Kp peaked at 8.3, 16--18~h before the flight. (d) Flat
+MLP first-layer weight share per hour, which stays uniform.}
+\label{fig:attention}
+\end{figure}
 
 \section{Conclusions}
 \label{sec:conclusions}
-\tbd{what we learned.} Limitations include the measurement noise floor
-described in Sec.~\ref{sec:eda} and correlation between records within a
-flight.
+Three lessons stand out. First, the physics model is the right starting
+point: learning NAIRAS's residual was more accurate and three times more
+stable than learning the dose directly. Second, recent space-weather history
+helps only when it is read with structure and the model is kept small: with
+a few hundred training flights, regularized temporal networks beat a
+current-time network, while a flat, larger network memorized; a longer
+window did not lower the average error, although attention found the
+delayed effect of a storm on an individual flight. Third, the objective
+matters most for safety: weighting high-dose errors cut the error above
+15~$\mu$Sv/h by 19\% relative to NAIRAS without hurting overall accuracy.
+The remaining error is mostly within-flight measurement variability and
+instrument differences, and no flight in the data was exposed to solar
+energetic particles, so the models cover galactic-cosmic-ray conditions only.
+Natural next steps are uncertainty estimates from seed ensembles~\cite{lakshminarayanan2017},
+per-instrument calibration, and pretraining the history encoder on long
+space-weather archives.
 
 \clearpage
 \section*{Peer Evaluation}

@@ -1,0 +1,181 @@
+== 1H 123
+  FlatMLP (residual)         val 3.870  epochs  12     2.2s
+  CNN-MLP (residual)         val 3.727  epochs  12     4.2s
+  TCN (residual)             val 3.774  epochs  14    24.7s
+  Transformer (residual)     val 3.687  epochs  22    59.0s
+  Transformer (direct)       val 3.826  epochs  23    61.1s
+
+1H rotation 123 seed 42: test P3
+                 model  rmse_all  rmse_high  r2_all
+             NAIRAS V3     3.990      6.503   0.449
+    FlatMLP (residual)     3.977      6.669   0.453
+    CNN-MLP (residual)     3.821      6.224   0.495
+        TCN (residual)     3.896      6.741   0.475
+Transformer (residual)     3.886      6.598   0.477
+  Transformer (direct)     3.966      7.114   0.456
+== 1H 132
+  FlatMLP (residual)         val 3.977  epochs  12     2.2s
+  CNN-MLP (residual)         val 3.821  epochs  12     4.4s
+  TCN (residual)             val 3.861  epochs  11    19.8s
+  Transformer (residual)     val 3.862  epochs  21    55.4s
+  Transformer (direct)       val 3.939  epochs  25    62.8s
+
+1H rotation 132 seed 42: test P2
+                 model  rmse_all  rmse_high  r2_all
+             NAIRAS V3     4.065      6.870   0.434
+    FlatMLP (residual)     3.870      6.570   0.487
+    CNN-MLP (residual)     3.727      6.340   0.525
+        TCN (residual)     3.808      6.747   0.504
+Transformer (residual)     3.704      6.458   0.530
+  Transformer (direct)     3.839      6.847   0.495
+== 1H 213
+  FlatMLP (residual)         val 3.831  epochs  11     2.3s
+  CNN-MLP (residual)         val 3.679  epochs  13     4.5s
+  TCN (residual)             val 3.707  epochs  13    23.9s
+  Transformer (residual)     val 3.660  epochs  18    50.1s
+  Transformer (direct)       val 3.778  epochs  21    53.5s
+
+1H rotation 213 seed 42: test P3
+                 model  rmse_all  rmse_high  r2_all
+             NAIRAS V3     3.990      6.503   0.449
+    FlatMLP (residual)     4.007      6.927   0.444
+    CNN-MLP (residual)     3.828      6.092   0.493
+        TCN (residual)     3.799      6.508   0.500
+Transformer (residual)     3.772      6.395   0.508
+  Transformer (direct)     4.031      7.106   0.438
+== 1H 231
+  FlatMLP (residual)         val 3.990  epochs  12     2.1s
+  CNN-MLP (residual)         val 3.785  epochs  14     4.5s
+  TCN (residual)             val 3.754  epochs  14    23.0s
+  Transformer (residual)     val 3.772  epochs  18    45.9s
+  Transformer (direct)       val 4.031  epochs  21    54.0s
+
+1H rotation 231 seed 42: test P1
+                 model  rmse_all  rmse_high  r2_all
+             NAIRAS V3     4.078      7.162   0.411
+    FlatMLP (residual)     3.841      6.815   0.477
+    CNN-MLP (residual)     3.738      6.321   0.505
+        TCN (residual)     3.725      6.156   0.508
+Transformer (residual)     3.660      6.139   0.525
+  Transformer (direct)     3.778      6.377   0.494
+== 1H 312
+  FlatMLP (residual)         val 4.168  epochs  11     2.1s
+  CNN-MLP (residual)         val 3.802  epochs  12     4.3s
+  TCN (residual)             val 3.883  epochs  11    19.9s
+  Transformer (residual)     val 3.918  epochs  11    27.9s
+  Transformer (direct)       val 4.128  epochs  21    52.5s
+
+1H rotation 312 seed 42: test P2
+                 model  rmse_all  rmse_high  r2_all
+             NAIRAS V3     4.065      6.870   0.434
+    FlatMLP (residual)     4.093      7.256   0.427
+    CNN-MLP (residual)     3.833      6.991   0.497
+        TCN (residual)     3.859      6.850   0.490
+Transformer (residual)     3.925      6.773   0.473
+  Transformer (direct)     4.085      7.400   0.429
+== 1H 321
+  FlatMLP (residual)         val 4.093  epochs  11     2.0s
+  CNN-MLP (residual)         val 3.800  epochs  13     4.3s
+  TCN (residual)             val 3.839  epochs  14    23.7s
+  Transformer (residual)     val 3.925  epochs  11    27.0s
+  Transformer (direct)       val 4.085  epochs  21    50.0s
+
+1H rotation 321 seed 42: test P1
+                 model  rmse_all  rmse_high  r2_all
+             NAIRAS V3     4.078      7.162   0.411
+    FlatMLP (residual)     4.168      7.441   0.385
+    CNN-MLP (residual)     3.808      6.775   0.486
+        TCN (residual)     3.928      6.829   0.453
+Transformer (residual)     3.918      6.821   0.456
+  Transformer (direct)     4.128      7.235   0.396
+== 5M 123
+  FlatMLP (residual)         val 3.946  epochs  11     1.9s
+  CNN-MLP (residual)         val 3.794  epochs  12     3.5s
+  TCN (residual)             val 3.754  epochs  15    13.3s
+  Transformer (residual)     val 3.834  epochs  21    32.3s
+  Transformer (direct)       val 3.865  epochs  18    26.5s
+
+5M rotation 123 seed 42: test P3
+                 model  rmse_all  rmse_high  r2_all
+             NAIRAS V3     3.990      6.503   0.449
+    FlatMLP (residual)     4.012      6.849   0.443
+    CNN-MLP (residual)     3.835      6.357   0.491
+        TCN (residual)     3.798      6.466   0.501
+Transformer (residual)     3.920      6.774   0.468
+  Transformer (direct)     3.993      6.810   0.448
+== 5M 132
+  FlatMLP (residual)         val 3.975  epochs  13     2.0s
+  CNN-MLP (residual)         val 3.811  epochs  14     4.1s
+  TCN (residual)             val 3.798  epochs  15    13.2s
+  Transformer (residual)     val 3.914  epochs  11    16.6s
+  Transformer (direct)       val 3.970  epochs  17    25.1s
+
+5M rotation 132 seed 42: test P2
+                 model  rmse_all  rmse_high  r2_all
+             NAIRAS V3     4.065      6.870   0.434
+    FlatMLP (residual)     4.021      6.973   0.447
+    CNN-MLP (residual)     3.807      6.694   0.504
+        TCN (residual)     3.754      6.729   0.518
+Transformer (residual)     3.863      6.734   0.489
+  Transformer (direct)     3.913      6.989   0.476
+== 5M 213
+  FlatMLP (residual)         val 3.849  epochs  12     1.8s
+  CNN-MLP (residual)         val 3.734  epochs  13     4.0s
+  TCN (residual)             val 3.685  epochs  14    13.5s
+  Transformer (residual)     val 3.753  epochs  20    30.0s
+  Transformer (direct)       val 3.796  epochs  28    40.3s
+
+5M rotation 213 seed 42: test P3
+                 model  rmse_all  rmse_high  r2_all
+             NAIRAS V3     3.990      6.503   0.449
+    FlatMLP (residual)     3.937      6.231   0.464
+    CNN-MLP (residual)     3.879      6.191   0.479
+        TCN (residual)     3.830      6.214   0.492
+Transformer (residual)     3.787      6.283   0.504
+  Transformer (direct)     3.803      6.526   0.500
+== 5M 231
+  FlatMLP (residual)         val 3.928  epochs  14     2.0s
+  CNN-MLP (residual)         val 3.799  epochs  14     3.9s
+  TCN (residual)             val 3.767  epochs  20    17.1s
+  Transformer (residual)     val 3.758  epochs  18    28.9s
+  Transformer (direct)       val 3.803  epochs  28    40.0s
+
+5M rotation 231 seed 42: test P1
+                 model  rmse_all  rmse_high  r2_all
+             NAIRAS V3     4.078      7.162   0.411
+    FlatMLP (residual)     3.887      6.662   0.465
+    CNN-MLP (residual)     3.763      6.368   0.498
+        TCN (residual)     3.823      6.414   0.482
+Transformer (residual)     3.761      6.398   0.499
+  Transformer (direct)     3.796      6.753   0.490
+== 5M 312
+  FlatMLP (residual)         val 4.001  epochs  11     1.6s
+  CNN-MLP (residual)         val 3.782  epochs  14     3.9s
+  TCN (residual)             val 3.799  epochs  13    11.0s
+  Transformer (residual)     val 3.907  epochs  13    18.7s
+  Transformer (direct)       val 3.887  epochs  25    35.0s
+
+5M rotation 312 seed 42: test P2
+                 model  rmse_all  rmse_high  r2_all
+             NAIRAS V3     4.065      6.870   0.434
+    FlatMLP (residual)     4.039      7.111   0.442
+    CNN-MLP (residual)     3.825      6.435   0.499
+        TCN (residual)     3.792      6.358   0.508
+Transformer (residual)     3.963      6.787   0.463
+  Transformer (direct)     3.917      7.123   0.475
+== 5M 321
+  FlatMLP (residual)         val 3.989  epochs  14     2.0s
+  CNN-MLP (residual)         val 3.788  epochs  13     3.8s
+  TCN (residual)             val 3.772  epochs  14    12.0s
+  Transformer (residual)     val 3.947  epochs  15    21.8s
+  Transformer (direct)       val 3.905  epochs  21    30.1s
+
+5M rotation 321 seed 42: test P1
+                 model  rmse_all  rmse_high  r2_all
+             NAIRAS V3     4.078      7.162   0.411
+    FlatMLP (residual)     4.054      7.023   0.418
+    CNN-MLP (residual)     3.789      6.684   0.491
+        TCN (residual)     3.815      6.598   0.484
+Transformer (residual)     3.928      7.126   0.453
+  Transformer (direct)     3.938      7.077   0.450
+DONE

@@ -1,0 +1,315 @@
+<title>Flight Dose Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: cockpit-instrument panels stacked down one column; each section is one thing to play with. */
+:root{
+  --bg:#F6F7F9; --panel:#FFFFFF; --ink:#14213D; --muted:#5B6474; --line:#DCE1E8;
+  --dose:#E8892B; --dose-soft:#FCE9D3; --shield:#24907F; --shield-soft:#D7F0EB; --gray:#9AA3AF; --warn:#C8553D;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --body:"Barlow","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1524; --panel:#162033; --ink:#E8EDF5; --muted:#9AA6B8; --line:#2A3650;
+  --dose:#F4A24C; --dose-soft:#3A2A18; --shield:#3CC2AC; --shield-soft:#143A35; --gray:#6B7587; --warn:#F07B63; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1524; --panel:#162033; --ink:#E8EDF5; --muted:#9AA6B8; --line:#2A3650;
+  --dose:#F4A24C; --dose-soft:#3A2A18; --shield:#3CC2AC; --shield-soft:#143A35; --gray:#6B7587; --warn:#F07B63; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+main{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2{font-family:var(--display);font-weight:700;letter-spacing:.01em;text-wrap:balance;margin:0;line-height:1.05}
+h1{font-size:clamp(44px,8vw,84px)}
+h2{font-size:clamp(28px,4.2vw,40px)}
+p{margin:0;max-width:65ch}
+.eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.hero{padding-block:44px 8px;display:grid;gap:18px}
+.hero .lede{font-size:20px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:8px}
+.stat{border-top:3px solid var(--ink);padding-top:10px;display:grid;gap:2px}
+.stat b{font-family:var(--display);font-size:42px;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:15px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:clamp(18px,3vw,32px);display:grid;gap:18px}
+.panel header{display:grid;gap:8px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{font:500 15px var(--body);color:var(--ink);background:transparent;border:0;padding:8px 14px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+button:focus-visible,input:focus-visible,.card:focus-visible{outline:3px solid var(--dose);outline-offset:2px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:24px;align-items:center}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.slider{display:grid;gap:6px}
+.slider label{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.slider label output{font-family:var(--mono);font-weight:500;color:var(--muted);font-size:14px;text-align:right}
+input[type=range]{width:100%;accent-color:var(--dose)}
+.readout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.readout div{display:grid;gap:2px;padding:12px;border-radius:10px;background:var(--bg)}
+.readout b{font-family:var(--display);font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.readout span{font-size:13px;color:var(--muted)}
+.readout .measured b{color:var(--dose)}
+.note{font-size:14px;color:var(--muted)}
+.chart{width:100%;overflow-x:auto}
+svg text{font-family:var(--body);fill:var(--ink)}
+svg .mono{font-family:var(--mono)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.callout{border-left:4px solid var(--dose);padding:4px 0 4px 14px;font-size:16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.card{perspective:900px;height:170px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .in{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.card.flip .in{transform:rotateY(180deg)}
+.card .f,.card .b{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line)}
+.card .f{background:var(--panel)}
+.card .f strong{font-family:var(--display);font-size:26px;line-height:1.1}
+.card .f small{color:var(--muted);margin-top:auto}
+.card .b{background:var(--shield-soft);transform:rotateY(180deg);font-size:15px}
+@media (prefers-reduced-motion:reduce){.card .in{transition:none}}
+footer{color:var(--muted);font-size:14px;display:grid;gap:6px;padding-top:8px}
+code{font-family:var(--mono);font-size:13px}
+.status{display:inline-block;font-family:var(--mono);font-size:12px;padding:3px 8px;border-radius:6px;background:var(--dose-soft);color:var(--warn)}
+</style>
+
+<main>
+  <section class="hero">
+    <div class="eyebrow">CSC 8851 Deep Learning · Team 5 · Sanjib K C</div>
+    <h1>Flight Dose Lab</h1>
+    <p class="lede">At cruising altitude, cosmic rays deliver a radiation dose that changes with where you fly and what the Sun is doing. A physics model, NAIRAS, estimates it everywhere. Here you can see where it misses, and how neural networks learn to correct it.</p>
+    <div class="stats">
+      <div class="stat"><b id="s-n">92,415</b><span>in-flight ARMAS measurements, 2013–2023</span></div>
+      <div class="stat"><b>89%</b><span>of high-dose readings (above 15 µSv/h) that NAIRAS underestimates</span></div>
+      <div class="stat"><b id="s-best">–</b><span id="s-best-l">best model's error reduction versus NAIRAS</span></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-fly">
+    <header>
+      <div class="eyebrow">Play 1 · the three knobs</div>
+      <h2 id="h-fly">Set your flight</h2>
+      <p>Move the sliders. The dose is the median of real measurements taken under those conditions.</p>
+    </header>
+    <div class="two">
+      <div style="display:grid;gap:18px">
+        <div class="slider">
+          <label for="alt">Altitude <output id="alt-o"></output></label>
+          <input id="alt" type="range" min="0" max="5" step="1" value="3">
+        </div>
+        <div class="slider">
+          <label for="rc">Where you fly <output id="rc-o"></output></label>
+          <input id="rc" type="range" min="0" max="4" step="1" value="0">
+        </div>
+        <div class="slider">
+          <label for="sun">The Sun <output id="sun-o"></output></label>
+          <input id="sun" type="range" min="0" max="1" step="1" value="1">
+        </div>
+        <div class="readout">
+          <div class="measured"><b id="r-a">–</b><span>measured (ARMAS), µSv/h</span></div>
+          <div><b id="r-n">–</b><span>NAIRAS estimate, µSv/h</span></div>
+          <div><b id="r-h">–</b><span>readings above 15 µSv/h</span></div>
+        </div>
+        <p class="note" id="r-note"></p>
+      </div>
+      <div class="chart" id="grid"></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-lb">
+    <header>
+      <div class="eyebrow">Play 2 · the race <span class="status" id="lb-status" hidden>preview numbers</span></div>
+      <h2 id="h-lb">Which model predicts the dose best?</h2>
+      <p>Shorter bars mean smaller error. Every model was tested on flights it never saw, across all six ways of splitting the data into training, validation and test sets. Click a bar to see each split.</p>
+    </header>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Which flights">
+        <button id="m-all" aria-pressed="true">All flights</button><button id="m-high" aria-pressed="false">High dose only</button>
+      </div>
+      <div class="seg" role="group" aria-label="History window">
+        <button data-w="all" aria-pressed="true">All models</button><button data-w="none" aria-pressed="false">No history</button><button data-w="1h" aria-pressed="false">1 h history</button><button data-w="24h" aria-pressed="false">24 h history</button>
+      </div>
+    </div>
+    <div class="legend"><span><i style="background:var(--gray)"></i>physics model</span><span><i style="background:var(--shield)"></i>no history</span><span><i style="background:#E9C46A"></i>1-hour history</span><span><i style="background:var(--dose)"></i>24-hour history</span></div>
+    <div class="chart" id="lb"></div>
+    <div class="chart" id="rot"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-att">
+    <header>
+      <div class="eyebrow">Play 3 · inside the Transformer</div>
+      <h2 id="h-att">How attention reads a storm</h2>
+      <p>A real flight over Florida on 9 September 2017, the morning after a strong geomagnetic storm. Each column is one token: the space-weather readings at one moment. Attention decides which moments matter.</p>
+    </header>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="History window"><button id="a-1" aria-pressed="false">1-hour window</button><button id="a-24" aria-pressed="true">24-hour window</button></div>
+      <div class="seg" role="group" aria-label="Step"><button data-s="1" aria-pressed="false">1 · tokens</button><button data-s="2" aria-pressed="false">2 · attention</button><button data-s="3" aria-pressed="true">3 · prediction</button></div>
+    </div>
+    <div class="chart" id="att"></div>
+    <p class="callout" id="att-text"></p>
+    <p class="note">The attention weights here come from a hand-set query that looks for storm conditions. They show the mechanism; the trained model learns its own queries.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="h-cards">
+    <header>
+      <div class="eyebrow">Play 4 · test yourself</div>
+      <h2 id="h-cards">Flip the cards</h2>
+      <p>Say the answer out loud, then click to check.</p>
+    </header>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <footer>
+    <p>Data: ARMAS and NAIRAS V3 machine-learning-ready dataset (Sadykov et al., Space Weather 2026), three flight-separated partitions. Errors are root-mean-square error in µSv/h. XGBoost reference from K C, Sadykov and Kempton, ICDMW 2025.</p>
+    <p>Code: <code>github.com/thesanjibkc/Deep_learning_project</code>, branch <code>final-project</code>.</p>
+  </footer>
+</main>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;parent&&parent.appendChild(e);return e;}
+function svg(w,h,host){host.innerHTML="";return el("svg",{viewBox:`0 0 ${w} ${h}`,width:"100%",role:"img"},host);}
+const fmt=(x,d=2)=>x==null?"–":Number(x).toFixed(d);
+
+const ALT=["8–9 km","9–10 km","10–11 km","11–12 km","12–13 km","13–14.5 km"];
+const RC=[["near the poles","Rc 0–1 GV, weak shield"],["Canada, north Atlantic","Rc 1–3 GV"],["continental US","Rc 3–6 GV"],["southern US, Caribbean","Rc 6–10 GV"],["near the equator","Rc above 10 GV, strong shield"]];
+
+let D=null;
+fetch("data.json").then(r=>r.json()).then(d=>{D=d;init();}).catch(()=>{
+  $("main").insertAdjacentHTML("beforeend",'<p class="note">The data file did not load. Reload the page to try again.</p>');});
+
+function init(){
+  $("#s-n").textContent=D.n.toLocaleString("en-US");
+  const nai=D.models.find(m=>m.name==="NAIRAS V3");
+  const best=D.models.filter(m=>m.name!=="NAIRAS V3").sort((a,b)=>a.all-b.all)[0];
+  $("#s-best").textContent=`−${((1-best.all/nai.all)*100).toFixed(1)}%`;
+  $("#s-best-l").textContent=`error reduction versus NAIRAS (${best.name}${best.window!=="none"?", "+best.window+" history":""})`;
+  $("#lb-status").hidden=D.status==="final";
+  ["alt","rc","sun"].forEach(id=>$("#"+id).addEventListener("input",drawFly));
+  drawFly(); bindLB(); drawLB(); bindAtt(); drawAtt(); drawCards();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{drawFly();drawLB();drawAtt();});
+}
+
+/* ---------- Play 1 ---------- */
+function drawFly(){
+  const ai=+$("#alt").value, ri=+$("#rc").value, sun=+$("#sun").value;
+  $("#alt-o").textContent=ALT[ai]; $("#rc-o").textContent=RC[ri][0]; $("#sun-o").textContent=sun?"quiet (more cosmic rays)":"active (fewer cosmic rays)";
+  const c=D.grid[ai][ri];
+  if(c){$("#r-a").textContent=fmt(c.A,1);$("#r-n").textContent=fmt(c.N,1);$("#r-h").textContent=c.hi+"%";}
+  else{$("#r-a").textContent="–";$("#r-n").textContent="–";$("#r-h").textContent="–";}
+  let note=c?`${c.n.toLocaleString("en-US")} measurements in this cell. `:"Too few flights at this setting to show a median. ";
+  if(c&&c.A>c.N+1.5) note+=`Here NAIRAS reads ${fmt(c.A-c.N,1)} µSv/h too low. `;
+  note+=sun?"A quiet Sun lets about 10% more galactic cosmic rays reach Earth (2019–20 versus 2014).":"An active Sun's solar wind pushes about 10% of galactic cosmic rays away (2014 versus 2019–20).";
+  $("#r-note").textContent=note;
+  // heatmap
+  const W=520,H=360,x0=120,y0=20,cw=(W-x0-10)/5,ch=(H-y0-60)/6, s=svg(W,H,$("#grid"));
+  const dose=css("--dose"),shield=css("--shield"),line=css("--line"),ink=css("--ink"),muted=css("--muted");
+  for(let i=0;i<6;i++)for(let j=0;j<5;j++){
+    const v=D.grid[i][j], y=y0+(5-i)*ch, x=x0+j*cw;
+    const t=v?Math.min(v.A/20,1):0;
+    el("rect",{x:x+2,y:y+2,width:cw-4,height:ch-4,rx:6,fill:v?dose:line,"fill-opacity":v?0.12+0.88*t:0.35,
+      stroke:(i===ai&&j===ri)?ink:"none","stroke-width":3},s);
+    if(v) el("text",{x:x+cw/2,y:y+ch/2+5,"text-anchor":"middle","font-size":15,"font-weight":600,class:"mono",fill:t>0.6?"#fff":ink},s,fmt(v.A,1));
+  }
+  ALT.forEach((a,i)=>el("text",{x:x0-10,y:y0+(5-i)*ch+ch/2+5,"text-anchor":"end","font-size":13,fill:muted},s,a));
+  ["poles","1–3","3–6","6–10","equator"].forEach((r,j)=>el("text",{x:x0+j*cw+cw/2,y:H-36,"text-anchor":"middle","font-size":13,fill:muted},s,r));
+  el("text",{x:x0+(W-x0)/2,y:H-12,"text-anchor":"middle","font-size":13,fill:muted},s,"magnetic shield (cutoff rigidity, GV) → stronger");
+}
+
+/* ---------- Play 2 ---------- */
+let lbMode="all", lbWin="all", lbSel=null;
+function bindLB(){
+  $("#m-all").onclick=()=>{lbMode="all";$("#m-all").setAttribute("aria-pressed","true");$("#m-high").setAttribute("aria-pressed","false");drawLB();};
+  $("#m-high").onclick=()=>{lbMode="high";$("#m-high").setAttribute("aria-pressed","true");$("#m-all").setAttribute("aria-pressed","false");drawLB();};
+  $$("[data-w]").forEach(b=>b.onclick=()=>{lbWin=b.dataset.w;$$("[data-w]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));drawLB();});
+}
+function color(m){return m.name==="NAIRAS V3"?css("--gray"):m.window==="none"?css("--shield"):m.window==="1h"?"#E9C46A":css("--dose");}
+function label(m){return m.window==="none"||m.name==="NAIRAS V3"?m.name:`${m.name} · ${m.window}`;}
+function drawLB(){
+  const nai=D.models.find(m=>m.name==="NAIRAS V3");
+  let ms=D.models.filter(m=>m.name==="NAIRAS V3"||lbWin==="all"||m.window===lbWin);
+  ms.sort((a,b)=>a[lbMode]-b[lbMode]);
+  const W=900,row=34,x0=270,H=ms.length*row+50, s=svg(W,H,$("#lb"));
+  const vals=ms.map(m=>m[lbMode]), lo=Math.min(...vals)-(lbMode==="all"?0.3:0.6), hi=Math.max(...vals)+(lbMode==="all"?0.15:0.3);
+  const X=v=>x0+(v-lo)/(hi-lo)*(W-x0-90), ink=css("--ink"), muted=css("--muted");
+  ms.forEach((m,i)=>{
+    const y=10+i*row, g=el("g",{style:"cursor:pointer",tabindex:0,role:"button","aria-label":`${label(m)} ${fmt(m[lbMode])}`},s);
+    g.onclick=g.onkeydown=e=>{if(e.type==="keydown"&&e.key!=="Enter"&&e.key!==" ")return;lbSel=m;drawRot();};
+    el("text",{x:x0-12,y:y+row/2+2,"text-anchor":"end","font-size":15,"font-weight":lbSel===m?700:400,fill:ink},g,label(m));
+    el("rect",{x:x0,y:y+5,width:Math.max(2,X(m[lbMode])-x0),height:row-12,rx:5,fill:color(m),stroke:lbSel===m?ink:"none","stroke-width":2},g);
+    el("text",{x:X(m[lbMode])+8,y:y+row/2+2,"font-size":14,class:"mono",fill:ink},g,fmt(m[lbMode])+(m[lbMode+"_sd"]?` ± ${fmt(m[lbMode+"_sd"])}`:""));
+  });
+  const yb=10+ms.length*row;
+  const nx=X(nai[lbMode]); el("line",{x1:nx,x2:nx,y1:4,y2:yb,stroke:ink,"stroke-dasharray":"5 5"},s);
+  el("text",{x:nx,y:yb+18,"text-anchor":"middle","font-size":13,fill:muted},s,"NAIRAS");
+  if(lbMode==="all"&&D.xgboost>lo){const gx=X(D.xgboost);el("line",{x1:gx,x2:gx,y1:4,y2:yb,stroke:css("--warn"),"stroke-dasharray":"2 4"},s);
+    el("text",{x:gx,y:yb+34,"text-anchor":"middle","font-size":13,fill:css("--warn")},s,"XGBoost, 2025 static model");}
+  if(!lbSel||!ms.includes(lbSel)) lbSel=ms.find(m=>m.name!=="NAIRAS V3");
+  drawRot();
+}
+function drawRot(){
+  const nai=D.models.find(m=>m.name==="NAIRAS V3"), m=lbSel, idx=lbMode==="all"?0:1;
+  const rots=["123","132","213","231","312","321"], W=900,H=170,x0=60, s=svg(W,H,$("#rot"));
+  const ink=css("--ink"),muted=css("--muted");
+  const all=rots.flatMap(r=>[nai.rot[r][idx],m.rot[r]?m.rot[r][idx]:null]).filter(v=>v!=null);
+  const lo=Math.min(...all)-0.1,hi=Math.max(...all)+0.1, Y=v=>20+(hi-v)/(hi-lo)*95, cw=(W-x0)/6;
+  el("text",{x:0,y:14,"font-size":14,"font-weight":600,fill:ink},s,`${label(m)} versus NAIRAS on each split`);
+  rots.forEach((r,i)=>{const cx=x0+i*cw+cw/2;
+    el("line",{x1:cx,x2:cx,y1:Y(nai.rot[r][idx]),y2:m.rot[r]?Y(m.rot[r][idx]):Y(nai.rot[r][idx]),stroke:css("--line"),"stroke-width":4},s);
+    el("circle",{cx,cy:Y(nai.rot[r][idx]),r:8,fill:css("--gray")},s);
+    if(m.rot[r]) el("circle",{cx,cy:Y(m.rot[r][idx]),r:8,fill:color(m),stroke:ink,"stroke-width":1.5},s);
+    el("text",{x:cx,y:H-28,"text-anchor":"middle","font-size":12,fill:muted},s,`train P${r[0]} · val P${r[1]}`);
+    el("text",{x:cx,y:H-12,"text-anchor":"middle","font-size":12,"font-weight":600,fill:muted},s,`test P${r[2]}`);});
+  el("text",{x:x0-8,y:Y(hi-0.1)+4,"text-anchor":"end","font-size":12,class:"mono",fill:muted},s,fmt(hi-0.1));
+  el("text",{x:x0-8,y:Y(lo+0.1)+4,"text-anchor":"end","font-size":12,class:"mono",fill:muted},s,fmt(lo+0.1));
+}
+
+/* ---------- Play 3 ---------- */
+let aWin=24, aStep=3; const Q=[0,1,-1,-0.6,0.2,0.3];
+function bindAtt(){
+  $("#a-1").onclick=()=>{aWin=12;$("#a-1").setAttribute("aria-pressed","true");$("#a-24").setAttribute("aria-pressed","false");drawAtt();};
+  $("#a-24").onclick=()=>{aWin=24;$("#a-24").setAttribute("aria-pressed","true");$("#a-1").setAttribute("aria-pressed","false");drawAtt();};
+  $$("[data-s]").forEach(b=>b.onclick=()=>{aStep=+b.dataset.s;$$("[data-s]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));drawAtt();});
+}
+function drawAtt(){
+  const S=D.storm;
+  // 1-hour window: the hourly file has no 5-minute steps, so show the last hour's reading 12 times (what the 1-hour model effectively sees)
+  const Zw=aWin===24?S.z:S.z.map(r=>Array(12).fill(r[r.length-1]));
+  const T=Zw[0].length, sc=[...Array(T)].map((_,t)=>Zw.reduce((a,row,v)=>a+Q[v]*row[t],0)/Math.sqrt(6));
+  const m=Math.max(...sc), e=sc.map(x=>Math.exp(2*(x-m))), sum=e.reduce((a,b)=>a+b,0), w=e.map(x=>x/sum);
+  const W=900,x0=170,rowH=30,H=6*rowH+150, s=svg(W,H,$("#att")), cw=(W-x0-10)/T;
+  const ink=css("--ink"),muted=css("--muted"),dose=css("--dose"),shield=css("--shield");
+  S.vars.forEach((v,i)=>{el("text",{x:x0-10,y:20+i*rowH+rowH/2+4,"text-anchor":"end","font-size":14,fill:ink},s,v);
+    Zw[i].forEach((z,t)=>el("rect",{x:x0+t*cw+1,y:20+i*rowH+1,width:cw-2,height:rowH-2,rx:3,fill:z>=0?dose:shield,"fill-opacity":Math.min(Math.abs(z)/4,1)*0.9+0.06},s));});
+  const lab=aWin===24?["23 h before","12 h before","now"]:["55 min before","30 min before","now"];
+  el("text",{x:x0,y:12,"font-size":12,fill:muted},s,lab[0]);el("text",{x:x0+(W-x0)/2,y:12,"text-anchor":"middle","font-size":12,fill:muted},s,lab[1]);el("text",{x:W-10,y:12,"text-anchor":"end","font-size":12,fill:muted},s,lab[2]);
+  const by=20+6*rowH+14, bh=70;
+  if(aStep>=2){const mx=Math.max(...w);el("text",{x:x0-10,y:by+bh/2,"text-anchor":"end","font-size":14,fill:ink},s,"attention");
+    w.forEach((p,t)=>el("rect",{x:x0+t*cw+1,y:by+bh-p/mx*bh,width:cw-2,height:Math.max(1,p/mx*bh),rx:3,fill:dose,"fill-opacity":0.35+0.65*p/mx},s));}
+  el("text",{x:x0,y:H-10,"font-size":12,fill:muted},s,"orange = above average, teal = below average; darker = further from average");
+  const tmax=w.indexOf(Math.max(...w)), ago=aWin===24?`${T-1-tmax} hours`:"the whole hour (all equal)";
+  const flat=Math.max(...w)-Math.min(...w)<0.01;
+  let txt="";
+  if(aStep===1) txt=aWin===24?"In the 24-hour window you can see the storm: Kp jumps, Dst plunges and the solar wind's Bz turns sharply southward about 18 hours before the flight.":"In the 1-hour window the storm has already passed. Every token looks the same, so there is nothing for attention to choose between.";
+  if(aStep===2) txt=flat?"Attention spreads evenly over all tokens: with identical tokens, no moment is more informative than another.":`Attention concentrates on the storm hours. The largest weight falls ${ago} before the flight.`;
+  if(aStep===3) txt=`The attention summary, plus altitude (${S.alt_km} km), shielding (Rc ${S.rc} GV) and the NAIRAS estimate (${S.N} µSv/h), feeds a small network that predicts the correction. ARMAS measured ${S.A} µSv/h, so the ideal correction here is +${fmt(S.A-S.N,1)} µSv/h.`;
+  $("#att-text").textContent=txt;
+}
+
+/* ---------- Play 4 ---------- */
+function drawCards(){
+  const C=[["Cutoff rigidity (Rc)","How strong Earth's magnetic shield is at a place","The minimum momentum per charge a cosmic ray needs to get through. Near 0 GV at the poles, above 10 GV near the equator."],
+    ["Residual learning","What does the network actually predict?","The correction r = ARMAS − NAIRAS. Final estimate = NAIRAS + r. It was more accurate and four times more stable than predicting ARMAS directly."],
+    ["Token","What one input step is in our Transformer","The 35 space-weather readings at one moment. The 1-hour model sees 12 tokens, the 24-hour model 24."],
+    ["Attention","How the model picks important moments","Each token scores every other (query · key), softmax turns scores into weights that sum to 1, and the model takes the weighted average."],
+    ["Solar modulation","Why a quiet Sun means more dose","An active Sun's solar wind pushes galactic cosmic rays away. When the Sun is quiet, about 10% more reach Earth."],
+    ["Overfitting","Why bigger models did worse","They memorise the few hundred training flights. Smaller models with dropout and weight decay generalised better."],
+    ["Flight-separated split","Why we never split by row","Neighbouring rows of one flight are near copies. Keeping each flight in one partition means the test really is unseen flights."],
+    ["Lead–lag","What the 24-hour window can catch","Geomagnetic activity about 15 hours earlier relates to the NAIRAS error more than activity at the flight time."]];
+  const host=$("#cards");
+  C.forEach(([t,f,b])=>{const c=document.createElement("button");c.className="card";c.setAttribute("aria-label",`${t}: flip to see the answer`);
+    c.innerHTML=`<div class="in"><div class="f"><strong>${t}</strong><span>${f}</span><small>click to flip</small></div><div class="b">${b}</div></div>`;
+    c.onclick=()=>c.classList.toggle("flip");host.appendChild(c);});
+}
+</script>

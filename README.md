@@ -14,29 +14,45 @@ conditions, evaluated against in-flight ARMAS measurements.
 
 ---
 
-## Status (updated 2026-11-25)
+## Status (updated 2026-11-26)
 
 | Step | Status |
 |---|---|
-| Exploration 1–4 (where NAIRAS fails, maps, solar cycle, history) | ✅ done, in report |
-| MLP direct and residual, 6 rotations × 3 seeds | ✅ final, in report (Table 3) |
-| Temporal models: 1D-CNN, CNN–MLP, flattened-history MLP, TCN, Transformer (5M and 1H) | ⏳ next |
-| Weighted Huber loss for A > 15 | ⏳ |
-| Attention maps and integrated gradients | ⏳ |
-| 3 seeds per model | ✅ MLP · ⏳ temporal models |
-| Poster / slides (12–16) | ⏳ |
-| Final report | 🟡 intro, related work, data, exploration done |
+| Exploration 1–4 (where NAIRAS fails, maps, solar cycle, history) | ✅ in report |
+| MLP direct and residual, 6 rotations × 3 seeds | ✅ |
+| Regularization tuning (validation of rotation 123 only) | ✅ width 16, dropout 0.3, weight decay 0.01 |
+| Temporal models (Flat MLP, CNN–MLP, TCN, Transformer, direct Transformer), 1 h and 24 h, 6 rotations × 3 seeds | ✅ |
+| High-dose weighted Transformer (Huber, w = 4) | ✅ |
+| Seed ensembles + paired flight-bootstrap significance | ✅ `results/final/` |
+| Permutation importance + remaining-error analysis (6 rotations) | ✅ `results/explain/` |
+| Epoch-by-epoch attention tracking | ✅ `results/tracking/` |
+| Interactive page and training animation | ✅ `poster/web/`, `poster/animation/` |
+| Final report | 🟡 complete draft; check page limit on Overleaf |
+| Slides (12–16) | 🟡 slide 3 done |
 
-## Current results (test set, mean ± std over 6 rotations × 3 seeds)
+## Final results (test set, mean ± std over 18 runs = 6 rotations × 3 seeds)
 
 | Model | RMSE all (µSv/h) | RMSE A > 15 | Gain vs NAIRAS (all / high) |
 |---|---|---|---|
 | NAIRAS V3 | 4.044 ± 0.040 | 6.845 ± 0.277 | — |
-| XGBoost (K C et al. 2025, cited) | 3.671 ± 0.061 | not reported | 9.3% |
+| XGBoost (K C et al. 2025, cited, static data) | 3.671 ± 0.061 | not reported | 9.3% |
 | MLP, direct | 3.842 ± 0.096 | 6.627 ± 0.203 | 5.0% / 3.2% |
-| MLP, residual | 3.737 ± 0.032 | 6.311 ± 0.168 | 7.6% / 7.8% |
+| MLP (no history) | 3.737 ± 0.032 | 6.311 ± 0.168 | 7.6% / 7.8% |
+| Flat MLP, 24 h | 3.906 ± 0.070 | 6.731 ± 0.264 | 3.4% / 1.7% |
+| CNN–MLP, 24 h | 3.661 ± 0.043 | 6.212 ± 0.261 | 9.5% / 9.2% |
+| **TCN, 24 h** | **3.659 ± 0.029** | 6.173 ± 0.193 | 9.5% / 9.8% |
+| Transformer, direct, 24 h | 3.712 ± 0.054 | 6.417 ± 0.230 | 8.2% / 6.3% |
+| Transformer, 24 h | 3.667 ± 0.034 | 6.309 ± 0.148 | 9.3% / 7.8% |
+| Transformer, 1 h | 3.663 ± 0.039 | 6.261 ± 0.125 | 9.4% / 8.5% |
+| **Transformer, 1 h, high-dose weight 4** | 3.762 ± 0.080 | **5.563 ± 0.233** | 7.0% / **18.7%** |
 
----
+Seed ensembles (average of 3 seeds) lower every model by about 0.03 (Transformer 1 h: 3.628).
+Significance (`results/final/significance.csv`): temporal models beat the no-history MLP overall
+in all 6 rotations; residual beats direct; 1 h vs 24 h shows no difference; the weighted
+Transformer matches the MLP overall while cutting high-dose RMSE by 0.78 µSv/h.
+
+**Interactive:** [Flight Dose Lab](https://claude.ai/artifact/X3saE5EHSytJkidqedoo52) ·
+[Watching Attention Learn](https://claude.ai/artifact/SoxLwXhTsnEeFPNjU8EjjC) (private links; share from the page).
 
 ## Data
 
@@ -78,6 +94,21 @@ python3 explore/e01_where_nairas_fails.py
 python3 explore/e02_flight_map.py
 python3 explore/e03_solar_cycle.py
 python3 explore/e04_temporal_information.py
+
+# temporal models (both cadences, all rotations) -> results/temporal/<cadence>/
+for c in 1H 5M; do for r in 123 132 213 231 312 321; do
+  python3 train_temporal.py --cadence $c --rotation $r --seed 42
+done; done
+python3 src/summarize.py results/temporal/1H
+
+# final temporal runs, tuning, statistics, explanations, figures
+bash scripts/tune_temporal.sh          # validation-only tuning (rotation 123)
+bash scripts/run_final.sh              # 6 rotations x 3 seeds x 2 cadences (+ weighted)
+python3 src/final_stats.py             # seed ensembles + flight bootstrap
+for r in 123 132 213 231 312 321; do python3 src/explain_errors.py 1H $r 42; done
+python3 scripts/track_training.py      # epoch-by-epoch attention
+python3 src/plot_results.py results/temporal_final; python3 src/plot_tracking.py; python3 src/plot_explain.py
+python3 src/export_web.py results/temporal_final; python3 poster/animation/build.py
 
 # MLP baselines on all six train/validation/test assignments -> results/basic/
 for s in 42 1 2; do for r in 123 132 213 231 312 321; do

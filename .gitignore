@@ -32,3 +32,6 @@ data/
 
 # Course documents (kept locally, not published)
 docs/
+
+# Per-run prediction arrays are large and regenerable from the training scripts
+results/**/pred_*.npy

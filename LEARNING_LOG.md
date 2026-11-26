@@ -30,6 +30,9 @@ Move a card to "Mastered" once you answer it correctly on 3 reviews in a row.
 | 21 | Name the model ladder from simplest to the main model, and what question each rung answers. | 2026-11-25 | 2026-11-26 |
 | 22 | Train RMSE 2.2 vs test 3.7 (Random Forest): name it and explain what it means. | 2026-11-25 | 2026-11-26 |
 | 23 | What is an ablation, and why does Transformer vs MLP NOT prove attention helps? | 2026-11-25 | 2026-11-26 |
+| 24 | The Sun's two opposite effects on dose: name both, and which particles each involves. | 2026-11-26 | 2026-11-27 |
+| 25 | Permutation importance: how does it work, and what did the correction rely on most? | 2026-11-26 | 2026-11-27 |
+| 26 | Where does the remaining error live (within flight / between flights / aircraft), and what does that imply? | 2026-11-26 | 2026-11-27 |
 | 8 | Narrow band entirely above zero vs wide band crossing zero: what does each mean for ML? | 2026-11-24 | 2026-11-25 |
 
 ## Answers (cover before reviewing)
@@ -54,6 +57,9 @@ Move a card to "Mastered" once you answer it correctly on 3 reviews in a row.
 21. NAIRAS (physics) → linear/ridge residual (is the correction just linear?) → static tree model from the 2025 paper (prior ML) → current-time MLP (nonlinear, no history) → 1D-CNN / CNN-MLP (local patterns in history) → TCN (longer receptive field) → direct Transformer (attention, predicts A) → residual Transformer (attention + physics baseline). Each rung adds ONE idea, so the gain from each idea is measurable.
 22. Overfitting: the model memorizes training data (including noise) instead of learning patterns that generalize, so it is much better on training than on unseen flights. Watch train vs validation curves; use early stopping, dropout, weight decay.
 23. Ablation = remove or change ONE component and measure the effect. Transformer vs MLP changes two things at once (history AND attention), so a gain can't be credited to attention. Fix: compare models that get the SAME 24-h history (flattened-history MLP, CNN, TCN vs Transformer) to isolate attention; compare MLP (now) vs MLP (flattened history) to isolate history.
+24. (1) Solar modulation: an active Sun pushes away GALACTIC cosmic rays (GCR) → less dose. (2) Eruptions can release SOLAR energetic particles (SEP); only very energetic ones (GLE, hundreds of MeV+) add dose at aviation altitude, and only where the shield is weak (low Rc). Our data: NO SEP-exposed flights — Sept 2017 SEP happened while flights were at Rc 3–10 GV (blocked); Mar 2023 polar flight had a weak event with negligible >100 MeV flux; no GLE. Lesson: 'SEP occurring in space' ≠ 'flight exposed to SEP'.
+25. Shuffle one feature group across test rows (breaking its link to the target) and measure how much RMSE rises; bigger rise = model relies on it more. Correction relied on altitude (+0.68) and shielding Rc (+0.62), then NAIRAS input (+0.24) and neutron monitors (+0.21); other space-weather groups ≤0.05. No single hour mattered alone (hours are redundant).
+26. After the model: 81% of remaining error variance is within one flight (minute-to-minute noise), 12% between flights, 7% tied to the aircraft — above the 3% chance level, so a real instrument/aircraft effect. The model removed the error tied to Rc, altitude and storms (each now <1%). Implication: remaining error is mostly not fixable from space-weather inputs; part is instrument.
 7. Cut x into 2-unit bins (0–2, 2–4, ...); dot at the bin MIDPOINT (1, 3, 5, ...). In each bin, sort the errors: 25th percentile = band bottom, median = dot, 75th = band top. Bins with <30 points skipped. Band = middle 50%.
 8. Narrow and one-sided = systematic error, easy to correct. Wide and crossing zero = the binned variable alone can't tell the error direction; other inputs needed (the case for our model, panel d).
 6. 5M: 12 steps × 5 min (last 55 min). 1H: 24 steps × 1 h (last 23 h). Same rows, same times, same ARMAS/NAIRAS, same current (index 0) values.

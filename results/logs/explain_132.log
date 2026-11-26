@@ -1,0 +1,73 @@
+base test RMSE all 3.620  high 6.470
+                                        group                    kind  d_all  d_high
+Geomagnetic shielding (Rc, L, geomag lat/lon)        flight (current)  0.719   1.137
+                                     Altitude        flight (current)  0.677   0.655
+                             Neutron monitors space weather (history)  0.302   0.376
+                   NAIRAS estimate (as input)        flight (current)  0.301  -0.327
+                          Energetic particles space weather (history)  0.128   0.170
+                          Position (lat, lon)        flight (current)  0.125   0.260
+                                   Solar wind space weather (history)  0.049  -0.005
+Solar activity (sunspots, F10.7, polar field) space weather (history)  0.044  -0.037
+                                 Solar X-rays space weather (history)  0.007   0.011
+            Geomagnetic indices (Kp, ap, Dst) space weather (history) -0.004   0.023
+ steps_before  d_all  d_high
+           23 -0.001   0.036
+           22 -0.002   0.037
+           21 -0.003   0.035
+           20 -0.002   0.037
+           19 -0.002   0.039
+           18 -0.003   0.037
+           17 -0.004   0.034
+           16 -0.003   0.036
+           15 -0.001   0.038
+           14 -0.002   0.036
+           13 -0.001   0.037
+           12 -0.001   0.038
+           11 -0.002   0.040
+           10 -0.002   0.038
+            9  0.000   0.041
+            8 -0.001   0.040
+            7  0.000   0.041
+            6 -0.000   0.040
+            5 -0.000   0.040
+            4 -0.001   0.040
+            3 -0.000   0.043
+            2 -0.001   0.043
+            1 -0.001   0.043
+            0  0.000   0.045
+                           grouping  NAIRAS error  remaining error
+                Shielding band (Rc)         0.006            0.003
+                      Altitude band         0.027            0.003
+         Storm level (max Kp, 24 h)         0.004            0.001
+                               Year         0.078            0.010
+Aircraft (Vehicle ID, not an input)         0.148            0.031
+                                        n  nairas_mean  remaining_mean
+Aircraft (Vehicle ID, not an input)                                   
+G-IV**                               6868        -0.08            0.07
+DC87                                 4992         0.37            0.34
+DC-8**                               3318        -2.49           -0.29
+Unknwn                               2591        -1.50            0.99
+G-V*                                 2391         0.13           -0.06
+Unkn                                 1578        -2.12            0.55
+(AFRC                                1172        -1.23           -1.01
+G-V***                               1170         3.94            0.45
+AFRC                                 1041        -1.12           -0.15
+B789                                 1034        -0.18            0.06
+B739                                 1017        -0.47            0.13
+B772                                  840         0.87            0.11
+GLF4                                  463         5.35            2.26
+B738                                  415        -1.69            0.05
+PN-2                                  374         3.02            1.04
+B39M                                  337        -0.53           -1.22
+B752                                  287        -1.32            0.63
+data                                  280        -1.10            3.89
+A320                                  153         0.65           -0.19
+E75L                                  129         0.03            0.46
+B788                                   80         2.92            1.42
+commercial                             80        -3.14           -0.41
+CRJ2                                   57        -0.77           -0.77
+A319                                   38        -5.00           -1.42
+E145                                   19         0.77            0.57
+B737                                   17         0.41            2.20
+CRJ9                                    7        -3.12           -3.59
+C200                                    4        -3.05           -3.77

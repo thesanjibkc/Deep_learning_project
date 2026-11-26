@@ -101,7 +101,9 @@ def train_mlp(X, y, base, name):
     histories[name] = hist
     n_par = sum(p.numel() for p in model.parameters())
     best_ep = int(np.argmin([h["val_rmse"] for h in hist]) + 1)
-    record(name, predict(), {"params": n_par, "best_epoch": best_ep,
+    pred = predict()
+    np.save(OUT / f"pred_{name.replace(' ', '_').replace('(', '').replace(')', '')}.npy", pred.astype(np.float32))
+    record(name, pred, {"params": n_par, "best_epoch": best_ep,
                              "train_seconds": round(time.time() - t0, 1)})
     torch.save(model.state_dict(), OUT / f"{name.replace(' ', '_')}.pt")
 

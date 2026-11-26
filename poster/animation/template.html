@@ -1,0 +1,240 @@
+<title>Watching Attention Learn</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one stage. Network diagram on the left, learning curves + story on the right, results strip underneath. */
+:root{
+  --bg:#F6F7F9; --panel:#FFFFFF; --ink:#14213D; --muted:#5B6474; --line:#DCE1E8;
+  --amber:#E8892B; --amber-soft:#FCE9D3; --teal:#24907F; --teal-soft:#D7F0EB; --red:#C8553D; --gray:#9AA3AF;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --body:"Barlow","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1524; --panel:#162033; --ink:#E8EDF5; --muted:#9AA6B8; --line:#2A3650;
+  --amber:#F4A24C; --amber-soft:#3A2A18; --teal:#3CC2AC; --teal-soft:#143A35; --red:#F07B63; --gray:#6B7587; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1524; --panel:#162033; --ink:#E8EDF5; --muted:#9AA6B8; --line:#2A3650;
+  --amber:#F4A24C; --amber-soft:#3A2A18; --teal:#3CC2AC; --teal-soft:#143A35; --red:#F07B63; --gray:#6B7587; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px}
+.wrap{max-width:1400px;margin:0 auto;display:grid;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,5vw,58px);line-height:1;margin:0;text-wrap:balance}
+.sub{color:var(--muted);max-width:70ch;margin:4px 0 0}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stage{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px}
+@media (max-width:980px){.stage{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.panel h2{font-family:var(--display);font-weight:700;font-size:24px;margin:0 0 4px}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:var(--body);fill:var(--ink)}
+.side{display:grid;gap:16px;align-content:start}
+.story{display:grid;gap:8px}
+.story .ep{font-family:var(--display);font-size:46px;line-height:1;font-variant-numeric:tabular-nums}
+.story .ep small{font-size:20px;color:var(--muted);margin-left:6px}
+.story p{margin:0;font-size:18px;min-height:3.2em}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.controls button{font:600 15px var(--body);color:var(--panel);background:var(--ink);border:0;border-radius:9px;padding:8px 16px;cursor:pointer;min-width:84px}
+.controls button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);min-width:0}
+.controls input{flex:1;min-width:160px;accent-color:var(--amber)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.results{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.results{grid-template-columns:minmax(0,1fr)}}
+.caveat{font-size:13px;color:var(--muted)}
+.key{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted)}
+.key i{display:inline-block;width:18px;height:4px;border-radius:2px;margin-right:6px;vertical-align:3px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Team 5 · aviation radiation dose · real training run</div>
+      <h1>Watching Attention Learn</h1>
+      <p class="sub">Two networks read the same 24 hours of space weather before a flight on 9 September 2017, the morning after a severe geomagnetic storm. Press play to watch them train.</p>
+    </div>
+  </header>
+
+  <div class="stage">
+    <section class="panel" aria-label="Network diagram">
+      <h2>Inside the Transformer</h2>
+      <div class="key"><span><i style="background:var(--amber)"></i>attention beam: thicker = more weight</span><span><i style="background:var(--teal)"></i>Flat MLP: share of weight per hour</span></div>
+      <svg id="net" viewBox="0 0 900 600" role="img" aria-label="Transformer attention over 24 hours, changing with training epoch"></svg>
+    </section>
+    <div class="side">
+      <section class="panel story" aria-live="polite">
+        <div class="ep" id="ep">Epoch 0<small>of 30</small></div>
+        <p id="cap"></p>
+        <div class="controls">
+          <button id="play" aria-label="Play">Play</button>
+          <button class="ghost" id="back" aria-label="Previous epoch">◀</button>
+          <button class="ghost" id="fwd" aria-label="Next epoch">▶</button>
+          <input id="scrub" type="range" min="0" max="30" step="1" value="0" aria-label="Epoch">
+        </div>
+        <div class="caveat">Space to play or pause, arrow keys to step.</div>
+      </section>
+      <section class="panel" aria-label="Learning curves">
+        <h2>Error on unseen flights</h2>
+        <div class="key"><span><i style="background:var(--amber)"></i>Transformer</span><span><i style="background:var(--red)"></i>Flat MLP</span><span>solid = validation · dashed = training</span></div>
+        <svg id="curve" viewBox="0 0 520 300" role="img" aria-label="Training and validation error by epoch for both networks"></svg>
+      </section>
+    </div>
+  </div>
+
+  <div class="results">
+    <section class="panel" aria-label="Final results overall">
+      <h2>Final result: all flights</h2>
+      <svg id="res1" viewBox="0 0 640 260" role="img" aria-label="Test error for each model, all flights"></svg>
+    </section>
+    <section class="panel" aria-label="Final results high dose">
+      <h2>Final result: high dose (above 15 µSv/h)</h2>
+      <svg id="res2" viewBox="0 0 640 260" role="img" aria-label="Test error for high-dose flights"></svg>
+    </section>
+  </div>
+  <p class="caveat">Diagram and curves: one training run (train P1, validate P2, seed 42) on one flight. Results: mean of 18 runs (6 data splits × 3 seeds), tested on flights never seen in training. XGBoost is quoted from K C et al., ICDMW 2025 (static model). Attention shows what the model used, not physical cause.</p>
+</div>
+
+<script id="data" type="application/json">/*DATA*/</script>
+<script>
+const D=JSON.parse(document.getElementById("data").textContent);
+const NS="http://www.w3.org/2000/svg", $=s=>document.querySelector(s);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function el(t,a,p,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;p&&p.appendChild(e);return e;}
+const E=D.epochs.length-1, BEST=D.best_epoch_transformer, T=24;
+const trf=D.transformer, flat=D.flat_mlp, S=D.storm_flight;
+const kp=S.raw_24h[1].map(v=>v/10);
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let pos=0, playing=false, last=0;
+
+/* ---------- static parts of the network diagram ---------- */
+const net=$("#net"); const X0=60, TW=27.5, TOK_Y=330, CELL=14;
+const tokX=i=>X0+i*TW;
+const beams=el("g",{},net), tokens=el("g",{},net), flatG=el("g",{},net), labels=el("g",{},net);
+function buildNet(){
+  net.innerHTML=""; const ink=css("--ink"),muted=css("--muted"),amber=css("--amber"),teal=css("--teal"),line=css("--line"),panel=css("--panel");
+  // summary token and head
+  const SX=X0+T*TW/2-60, SY=92;
+  net.appendChild(beams); net.appendChild(tokens); net.appendChild(flatG); net.appendChild(labels);
+  beams.innerHTML="";tokens.innerHTML="";flatG.innerHTML="";labels.innerHTML="";
+  el("rect",{x:SX,y:SY-26,width:120,height:52,rx:10,fill:css("--amber-soft"),stroke:amber,"stroke-width":2},labels);
+  el("text",{x:SX+60,y:SY-4,"text-anchor":"middle","font-size":16,"font-weight":600},labels,"Summary [S]");
+  el("text",{x:SX+60,y:SY+15,"text-anchor":"middle","font-size":12,fill:muted},labels,"asks: which hours matter?");
+  // head and prediction
+  const HX=760;
+  el("line",{x1:SX+120,y1:SY,x2:HX-8,y2:SY,stroke:muted,"stroke-width":1.5,"marker-end":"url(#ah)"},labels);
+  const defs=el("defs",{},net); const mk=el("marker",{id:"ah",viewBox:"0 0 10 10",refX:8,refY:5,markerWidth:7,markerHeight:7,orient:"auto"},defs);
+  el("path",{d:"M1 1L9 5L1 9z",fill:muted},mk);
+  el("rect",{x:HX,y:SY-40,width:126,height:80,rx:10,fill:panel,stroke:line,"stroke-width":1.5},labels);
+  el("text",{x:HX+63,y:SY-18,"text-anchor":"middle","font-size":13,fill:muted},labels,"+ altitude "+S.altitude_km+" km");
+  el("text",{x:HX+63,y:SY,"text-anchor":"middle","font-size":13,fill:muted},labels,"+ shield Rc "+S.rc_gv+" GV");
+  el("text",{x:HX+63,y:SY+22,"text-anchor":"middle","font-size":15,"font-weight":600},labels,"→ correction");
+  const PY=200;
+  el("rect",{x:HX-60,y:PY,width:186,height:96,rx:10,fill:css("--teal-soft"),stroke:"none"},labels);
+  el("text",{x:HX+33,y:PY+24,"text-anchor":"middle","font-size":13,fill:muted},labels,"NAIRAS physics model");
+  el("text",{x:HX+33,y:PY+46,"text-anchor":"middle","font-size":20,"font-family":"IBM Plex Mono"},labels,S.nairas+" µSv/h");
+  el("text",{x:HX+33,y:PY+70,"text-anchor":"middle","font-size":13,fill:muted},labels,"measured on board");
+  el("text",{x:HX+33,y:PY+90,"text-anchor":"middle","font-size":20,"font-family":"IBM Plex Mono",fill:css("--red")},labels,S.armas+" µSv/h");
+  el("text",{x:HX+33,y:PY+122,"text-anchor":"middle","font-size":13,fill:muted},labels,"needed correction");
+  el("text",{x:HX+33,y:PY+144,"text-anchor":"middle","font-size":20,"font-weight":600,"font-family":"IBM Plex Mono"},labels,"+"+(S.armas-S.nairas).toFixed(1));
+  // tokens: 6 cells each, colored by real z-scores
+  S.variables.forEach((v,j)=>el("text",{x:X0-8,y:TOK_Y+j*CELL+11,"text-anchor":"end","font-size":11,fill:muted},labels,["NM","Kp","Dst","Bz","speed","press."][j]));
+  for(let i=0;i<T;i++){
+    for(let j=0;j<6;j++){const z=S.z_scores_24h[j][i];
+      el("rect",{x:tokX(i)+2,y:TOK_Y+j*CELL,width:TW-4,height:CELL-2,rx:2,fill:z>=0?amber:teal,"fill-opacity":Math.min(Math.abs(z)/4,1)*0.85+0.08},tokens);}
+  }
+  // Kp strip
+  const KY=TOK_Y+6*CELL+30, KH=60;
+  el("text",{x:X0-8,y:KY+KH/2,"text-anchor":"end","font-size":12,"font-weight":600},labels,"Kp");
+  for(let i=0;i<T;i++){const h=kp[i]/9*KH;
+    el("rect",{x:tokX(i)+4,y:KY+KH-h,width:TW-8,height:h,rx:2,fill:kp[i]>=5?css("--red"):css("--gray")},tokens);}
+  el("text",{x:tokX(5)+TW,y:KY-6,"text-anchor":"middle","font-size":12,fill:css("--red")},labels,"storm: Kp "+Math.max(...kp).toFixed(1));
+  // hours axis
+  [0,6,12,18,23].forEach(i=>el("text",{x:tokX(i)+TW/2,y:KY+KH+18,"text-anchor":"middle","font-size":12,fill:muted},labels,i===23?"flight":(23-i)+" h before"));
+  // Flat MLP bar
+  const FY=KY+KH+44;
+  el("text",{x:X0,y:FY-8,"font-size":14,"font-weight":600},labels,"Flat MLP: the same 24 h as one long row of 840 numbers");
+  for(let i=0;i<T;i++) el("rect",{x:tokX(i)+1,y:FY,width:TW-2,height:26,rx:2,fill:teal,"fill-opacity":0.3,class:"fb","data-i":i},flatG);
+  el("text",{x:tokX(T)+10,y:FY+18,"font-size":12,fill:muted},labels,"→ dense layers");
+  el("text",{x:X0,y:FY+46,"font-size":12,fill:muted},labels,"Shade = share of first-layer weight on that hour. It stays even: no hour stands out.");
+  // beam placeholders
+  for(let i=0;i<T;i++) el("path",{class:"beam","data-i":i,fill:"none",stroke:amber,"stroke-linecap":"round"},beams);
+  net.dataset.sx=SX+60; net.dataset.sy=SY+26;
+}
+const lerp=(a,b,t)=>a+(b-a)*t;
+function at(arr,p){p=Math.max(0,Math.min(E,p));const i=Math.floor(p),t=p-i;return arr[i].map((v,k)=>lerp(v,arr[Math.min(i+1,E)][k],t));}
+function drawNet(){
+  const w=at(trf.attention_storm_flight,pos), f=at(flat.weight_share_per_hour,pos);
+  const mx=Math.max(...trf.attention_storm_flight.flat()), uni=1/T;
+  const sx=+net.dataset.sx, sy=+net.dataset.sy;
+  net.querySelectorAll(".beam").forEach(b=>{const i=+b.dataset.i,x=tokX(i)+TW/2,y=TOK_Y-4;
+    const r=(w[i]-uni*0.6)/(mx-uni*0.6), k=Math.max(0,Math.min(1,r));
+    b.setAttribute("d",`M${sx},${sy} C${sx},${(sy+y)/2} ${x},${(sy+y)/2} ${x},${y}`);
+    b.setAttribute("stroke-width",(0.6+k*9).toFixed(2)); b.setAttribute("stroke-opacity",(0.12+k*0.85).toFixed(2));});
+  const fm=Math.max(...flat.weight_share_per_hour.flat());
+  net.querySelectorAll(".fb").forEach(b=>{const i=+b.dataset.i,k=Math.max(0,Math.min(1,(f[i]-uni*0.6)/(fm-uni*0.6)));
+    b.setAttribute("fill-opacity",(0.12+k*0.85).toFixed(2));});
+}
+
+/* ---------- learning curves ---------- */
+const cv=$("#curve");
+function drawCurve(){
+  cv.innerHTML=""; const W=520,H=300,x0=48,x1=505,y0=18,y1=255, ink=css("--ink"),muted=css("--muted"),line=css("--line");
+  const lo=2.6, hi=4.0, X=e=>x0+e/E*(x1-x0), Y=v=>y0+(hi-Math.min(v,hi))/(hi-lo)*(y1-y0);
+  [2.8,3.2,3.6,4.0].forEach(v=>{el("line",{x1:x0,x2:x1,y1:Y(v),y2:Y(v),stroke:line},cv);el("text",{x:x0-8,y:Y(v)+4,"text-anchor":"end","font-size":11,fill:muted,"font-family":"IBM Plex Mono"},cv,v.toFixed(1));});
+  [0,10,20,30].forEach(e=>el("text",{x:X(e),y:y1+18,"text-anchor":"middle","font-size":11,fill:muted},cv,e));
+  el("text",{x:(x0+x1)/2,y:H-4,"text-anchor":"middle","font-size":12,fill:muted},cv,"epoch");
+  el("text",{x:12,y:y0+2,"font-size":11,fill:muted},cv,"RMSE µSv/h");
+  const upto=Math.floor(pos);
+  const series=[[trf.val_rmse,css("--amber"),""],[trf.train_rmse,css("--amber"),"5 4"],[flat.val_rmse,css("--red"),""],[flat.train_rmse,css("--red"),"5 4"]];
+  series.forEach(([s,c,dash])=>{const pts=s.slice(0,upto+1).map((v,e)=>`${X(e)},${Y(v)}`);
+    if(upto<E){const t=pos-upto;pts.push(`${X(pos)},${Y(lerp(s[upto],s[upto+1],t))}`);}
+    el("polyline",{points:pts.join(" "),fill:"none",stroke:c,"stroke-width":dash?1.8:3,"stroke-dasharray":dash,"stroke-linejoin":"round"},cv);});
+  if(pos>=BEST){el("line",{x1:X(BEST),x2:X(BEST),y1:y0,y2:y1,stroke:muted,"stroke-dasharray":"2 4"},cv);
+    el("circle",{cx:X(BEST),cy:Y(trf.val_rmse[BEST]),r:6,fill:css("--amber")},cv);
+    el("text",{x:X(BEST)+8,y:Y(trf.val_rmse[BEST])+20,"font-size":12,"font-weight":600},cv,"best: "+trf.val_rmse[BEST].toFixed(2));}
+  el("line",{x1:X(pos),x2:X(pos),y1:y0,y2:y1,stroke:ink,"stroke-width":1,"stroke-opacity":0.35},cv);
+}
+
+/* ---------- story ---------- */
+function caption(e){
+  const fv=flat.val_rmse, tv=trf.val_rmse;
+  if(e===0) return "Untrained. The summary token spreads its attention evenly over all 24 hours.";
+  if(e<4) return "Attention is starting to lean toward the hours around the storm, 16 to 18 hours before the flight.";
+  if(e<BEST) return `The Transformer keeps improving on unseen flights (${tv[e].toFixed(2)}). The Flat MLP's validation error has stopped falling (${fv[e].toFixed(2)}).`;
+  if(e===BEST) return `Best Transformer epoch. Attention is concentrated on the storm hours. Nobody told the model about storms or Kp.`;
+  return `The Flat MLP is memorising: training error ${flat.train_rmse[e].toFixed(2)}, but ${fv[e].toFixed(2)} on unseen flights. Early stopping keeps the Transformer from epoch ${BEST}.`;
+}
+function render(){const e=Math.round(pos);
+  $("#ep").innerHTML=`Epoch ${Math.floor(pos)}<small>of ${E}</small>`; $("#cap").textContent=caption(Math.floor(pos));
+  $("#scrub").value=Math.floor(pos); drawNet(); drawCurve();}
+
+/* ---------- results ---------- */
+function bars(host,rows,ref){
+  host.innerHTML=""; const W=640,row=32,x0=230,H=rows.length*row+20; host.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const lo=Math.min(...rows.map(r=>r[1]))-0.5, hi=Math.max(...rows.map(r=>r[1]))+0.15, X=v=>x0+(v-lo)/(hi-lo)*(W-x0-70);
+  rows.forEach(([n,v,c],i)=>{const y=6+i*row;
+    el("text",{x:x0-10,y:y+row/2+2,"text-anchor":"end","font-size":14},host,n);
+    el("rect",{x:x0,y:y+5,width:X(v)-x0,height:row-12,rx:4,fill:c},host);
+    el("text",{x:X(v)+6,y:y+row/2+2,"font-size":13,"font-family":"IBM Plex Mono"},host,v.toFixed(3));});
+}
+function drawResults(){const R=D.final_results_18_runs, a=css("--amber"),t=css("--teal"),g=css("--gray"),r=css("--red"),m=css("--muted");
+  bars($("#res1"),[["NAIRAS physics model",R["NAIRAS V3"],g],["Flat MLP, 24 h",R["Flat MLP 24h"],r],["MLP, no history",R["MLP no history"],t],
+    ["XGBoost 2025 (cited)",R["XGBoost 2025 (cited)"],m],["Transformer, 24 h",R["Transformer 24h"],a],["TCN, 24 h",R["TCN 24h"],a]]);
+  const H=R.high_dose;
+  bars($("#res2"),[["NAIRAS physics model",H["NAIRAS V3"],g],["MLP, no history",H["MLP no history"],t],["Transformer, 24 h",H["Transformer 24h"],a],
+    ["Transformer + high-dose weight",H["Transformer + high-dose weight 1h"],a]]);}
+
+/* ---------- controls ---------- */
+function setPlay(p){playing=p;$("#play").textContent=p?"Pause":"Play";$("#play").setAttribute("aria-label",p?"Pause":"Play");if(p){if(pos>=E)pos=0;last=performance.now();requestAnimationFrame(tick);}}
+function tick(now){if(!playing)return;pos=Math.max(0,Math.min(E,pos+Math.max(0,now-last)/500));last=now;render();if(pos>=E){setPlay(false);return;}requestAnimationFrame(tick);}
+$("#play").onclick=()=>setPlay(!playing);
+$("#back").onclick=()=>{setPlay(false);pos=Math.max(0,Math.floor(pos)-1);render();};
+$("#fwd").onclick=()=>{setPlay(false);pos=Math.min(E,Math.floor(pos)+1);render();};
+$("#scrub").oninput=e=>{setPlay(false);pos=+e.target.value;render();};
+addEventListener("keydown",e=>{if(e.target.tagName==="INPUT"&&e.key!==" ")return;
+  if(e.key===" "){e.preventDefault();setPlay(!playing);} if(e.key==="ArrowRight")$("#fwd").click(); if(e.key==="ArrowLeft")$("#back").click();});
+function all(){buildNet();render();drawResults();}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",all);
+all(); if(!reduce) setTimeout(()=>setPlay(true),700);
+</script>

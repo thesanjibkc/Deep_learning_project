@@ -1,0 +1,69 @@
+base test RMSE all 3.668  high 6.218
+                                        group                    kind  d_all  d_high
+                                     Altitude        flight (current)  0.676   0.726
+Geomagnetic shielding (Rc, L, geomag lat/lon)        flight (current)  0.539   1.105
+                             Neutron monitors space weather (history)  0.400   0.457
+                   NAIRAS estimate (as input)        flight (current)  0.205  -0.173
+                          Energetic particles space weather (history)  0.103  -0.171
+                          Position (lat, lon)        flight (current)  0.080   0.277
+                                   Solar wind space weather (history)  0.048   0.173
+Solar activity (sunspots, F10.7, polar field) space weather (history)  0.034  -0.315
+                                 Solar X-rays space weather (history)  0.004   0.076
+            Geomagnetic indices (Kp, ap, Dst) space weather (history) -0.003  -0.009
+ steps_before  d_all  d_high
+           23  0.004   0.058
+           22  0.006   0.069
+           21  0.005   0.063
+           20  0.008   0.068
+           19  0.007   0.069
+           18  0.009   0.074
+           17  0.008   0.068
+           16  0.009   0.076
+           15  0.005   0.063
+           14  0.006   0.064
+           13  0.006   0.061
+           12  0.004   0.058
+           11  0.004   0.059
+           10  0.006   0.072
+            9  0.004   0.061
+            8  0.006   0.063
+            7  0.005   0.060
+            6  0.008   0.070
+            5  0.007   0.064
+            4  0.005   0.062
+            3  0.007   0.066
+            2  0.005   0.064
+            1  0.006   0.067
+            0  0.008   0.069
+                           grouping  NAIRAS error  remaining error
+                Shielding band (Rc)         0.024            0.002
+                      Altitude band         0.042            0.006
+         Storm level (max Kp, 24 h)         0.015            0.001
+                               Year         0.119            0.011
+Aircraft (Vehicle ID, not an input)         0.159            0.017
+                                        n  nairas_mean  remaining_mean
+Aircraft (Vehicle ID, not an input)                                   
+G-IV**                               7362         0.03           -0.02
+DC87                                 5015         0.23            0.33
+Unknwn                               2982        -0.46            0.80
+DC-8**                               2722        -2.63           -0.49
+G-V*                                 2575        -0.25           -0.05
+G-V***                               2475         3.97            0.85
+B772                                 1472         0.74            0.68
+AFRC                                 1330        -0.79            0.03
+(AFRC                                1305        -0.34            0.67
+Unkn                                 1004        -2.60           -0.32
+B739                                  888        -1.21           -0.09
+GLF4                                  852         4.21           -0.76
+B738                                  542        -0.06           -0.36
+B39M                                  511         0.43            0.16
+B753                                  301         0.40           -0.05
+B752                                  291        -1.42           -0.06
+PN-2                                  248         0.86           -0.77
+commercial                            155         1.85            1.99
+B789                                  115         1.12            0.69
+A20N                                  101        -0.79            0.70
+A319                                   44         0.31            2.06
+A320                                   38        -0.74            0.00
+NSLbln                                 22         0.57            1.87
+WV-bln                                 19         2.21            5.32
