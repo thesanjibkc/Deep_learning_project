@@ -26,7 +26,7 @@ conditions, evaluated against in-flight ARMAS measurements.
 | Seed ensembles + paired flight-bootstrap significance | ✅ `results/final/` |
 | Permutation importance + remaining-error analysis (6 rotations) | ✅ `results/explain/` |
 | Epoch-by-epoch attention tracking | ✅ `results/tracking/` |
-| Interactive page and training animation | ✅ `poster/web/`, `poster/animation/` |
+| Interactive page, training animation, Flight Model Zoo | ✅ `poster/web/`, `poster/animation/`, `poster/zoo/` |
 | Final report | 🟡 complete draft; check page limit on Overleaf |
 | Slides (12–16) | 🟡 slide 3 done |
 
@@ -109,6 +109,7 @@ for r in 123 132 213 231 312 321; do python3 src/explain_errors.py 1H $r 42; don
 python3 scripts/track_training.py      # epoch-by-epoch attention
 python3 src/plot_results.py results/temporal_final; python3 src/plot_tracking.py; python3 src/plot_explain.py
 python3 src/export_web.py results/temporal_final; python3 poster/animation/build.py
+python3 scripts/export_model_zoo.py; python3 poster/zoo/build.py   # Flight Model Zoo (real model internals on one unseen flight)
 
 # MLP baselines on all six train/validation/test assignments -> results/basic/
 for s in 42 1 2; do for r in 123 132 213 231 312 321; do
