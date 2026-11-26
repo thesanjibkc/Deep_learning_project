@@ -1,0 +1,423 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+\usepackage[breaklinks=true,bookmarks=false]{hyperref}
+
+\cvprfinalcopy % camera-ready (non-anonymous) version
+
+\def\cvprPaperID{****}
+\def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
+
+% Draft marker for anything not yet computed. Remove before submission.
+\newcommand{\tbd}[1]{\textcolor{red}{[TBD: #1]}}
+
+\graphicspath{{figures/}{../figures/explore/}{../figures/results/}}
+
+\ifcvprfinal\pagestyle{empty}\fi
+\begin{document}
+
+%%%%%%%%% TITLE
+\title{Physics-Guided Temporal Transformer for Aviation\\Effective Dose-Rate Estimation}
+
+\author{Sanjib K C\\
+{\tt\small skc3@gsu.edu}
+}
+
+\maketitle
+\thispagestyle{empty}
+
+%%%%%%%%% ABSTRACT
+\begin{abstract}
+Aircrew and passengers are exposed to cosmic radiation at cruising altitude,
+but the dose rate is measured on only a few flights, so operational estimates
+rely on physics models. Using 92,415 in-flight measurements, we show that the
+physics model NAIRAS V3 underpredicts 89\% of observations above
+15~$\mu$Sv/h and cannot tell from its own estimate which flights will receive
+high doses. We train a Transformer to learn a correction to NAIRAS from the
+aircraft's location and the recent history of solar and geomagnetic
+conditions, compare it with static machine-learning and convolutional
+baselines, and use attention and attribution to identify which conditions and
+time lags drive the correction. \tbd{one sentence with the main quantitative
+result.}
+\end{abstract}
+
+%%%%%%%%% BODY TEXT
+\section{Introduction}
+\label{sec:intro}
+
+Galactic cosmic rays and solar energetic particles produce showers of
+secondary radiation in the atmosphere, and the resulting dose rate at
+cruising altitude is many times higher than at the ground. Aircrew are
+therefore among the most radiation-exposed occupational groups. Direct
+measurements, such as those from the Automated Radiation Measurements for
+Aerospace Safety (ARMAS) system~\cite{tobiska2016}, exist for only a small
+number of flights, so routine dose estimates depend on physics-based models
+such as NAIRAS~\cite{mertens2013}.
+
+The high-dose regime is where these models fail and where accuracy matters
+most. On the ARMAS dataset~\cite{sadykov2026}, NAIRAS V3 has an RMSE of
+4.05~$\mu$Sv/h overall but 6.86~$\mu$Sv/h when the measured dose exceeds
+15~$\mu$Sv/h, and it underpredicts 89\% of those observations
+(Sec.~\ref{sec:eda}). The failure is not a simple offset: grouped by its own
+estimate, NAIRAS is nearly unbiased, yet its errors in each group range widely
+in both directions (Fig.~\ref{fig:nairas}d). In other words, NAIRAS cannot
+identify \emph{which} flights will receive high doses.
+
+Static machine-learning corrections~\cite{kc2025} reduce this error using the
+geospace conditions at the observation time, but they treat each observation
+independently. The dose, however, depends on interacting factors that evolve
+in time: altitude, the geomagnetic shielding of the aircraft's location, the
+phase of the solar cycle, and short-lived disturbances such as geomagnetic
+storms. We hypothesize that the recent history of these conditions carries
+information about the dose that a single snapshot misses.
+
+We address these gaps with a physics-guided temporal model. A Transformer
+encoder~\cite{vaswani2017} reads the recent history of 35 solar,
+interplanetary, and geomagnetic variables and predicts the \emph{residual}
+between ARMAS and NAIRAS, so that the physics model supplies the baseline and
+the network supplies what it misses. Our contributions are:
+(i) an exploratory analysis showing where and why NAIRAS fails;
+(ii) a residual Transformer compared with NAIRAS, a prior static model, and
+MLP, 1D-CNN, CNN--MLP, and TCN baselines;
+(iii) a comparison of a 1-hour (5-minute cadence) and a 24-hour (hourly
+cadence) history to test how far back space weather matters;
+(iv) an imbalance-aware loss for the rare high-dose regime; and
+(v) attention and integrated-gradient analysis of lead--lag effects.
+
+\section{Related Work}
+\label{sec:related}
+
+\textbf{Physics-based aviation dose models.}
+NAIRAS~\cite{mertens2013} and CARI-7~\cite{copeland2017} propagate cosmic-ray
+spectra through the geomagnetic field and atmosphere to compute dose at any
+location and altitude. They require no flight measurements, but their
+simplified inputs cause systematic biases that measurement campaigns such as
+ARMAS~\cite{tobiska2016} have exposed. We keep NAIRAS V3 as the baseline and
+learn its error rather than replacing it.
+
+\textbf{Machine learning for space weather and aviation dose.}
+Camporeale~\cite{camporeale2019} reviews machine-learning nowcasting in space
+weather and highlights scarce data and rare extreme events. Sadykov
+\etal~\cite{sadykov2026} released machine-learning-ready datasets that align
+ARMAS and NAIRAS with flight position, neutron-monitor counts, solar-wind
+parameters, particle fluxes, and geomagnetic indices. Our earlier
+work~\cite{kc2025} used the current-time conditions to correct NAIRAS; it
+serves as our static baseline. Here we model the preceding history explicitly.
+
+\textbf{Physics-guided learning.}
+Theory-guided data science~\cite{karpatne2017} argues that combining physical
+models with learning improves generalization over either alone. Learning the
+residual of a physics model is a simple instance of this idea; we test it
+against direct prediction with otherwise identical networks.
+
+\textbf{Temporal models and imbalanced targets.}
+Temporal convolutional networks~\cite{bai2018} and
+Transformers~\cite{vaswani2017,lim2021} model multivariate sequences, and
+attention weights can expose which time steps a prediction uses. Unlike
+long-horizon forecasting, our sequences are short and strongly
+autocorrelated, so whether attention helps is an empirical question. For
+skewed targets, Yang \etal~\cite{yang2021} show that standard losses
+underperform in sparse target regions; we use a threshold-weighted Huber
+loss~\cite{huber1964} because the high-dose threshold is defined
+operationally.
+
+\section{Model and Method}
+\label{sec:method}
+
+\subsection{Dataset}
+\label{sec:data}
+The dataset~\cite{sadykov2026} contains 92,415 ARMAS observations from
+2013--2023, split by flight into three partitions
+(Table~\ref{tab:partitions}) so that no flight contributes to more than one.
+Each observation has the measured effective dose rate $A$ (the target), the
+NAIRAS V3 estimate $N$, and 43 input features of two kinds
+(Table~\ref{tab:features}). The 8 \emph{static} features describe the
+aircraft's position and geomagnetic shielding at the observation time and
+have a single value per observation. The 35 \emph{temporal} features describe
+the solar, interplanetary, and geomagnetic environment and are given as a
+history: 12 steps at 5-minute cadence covering the preceding 55~min, or, for
+the same observations, 24 steps at hourly cadence covering the preceding
+23~h. The last step of each history is the observation time, so the current
+value of every temporal feature is also available. The vehicle identifier is
+excluded from all inputs.
+
+\begin{table}[t]
+\caption{Input features. Static features have one value per observation;
+temporal features have a history of $T=12$ five-minute steps or $T=24$ hourly
+steps ending at the observation time. Kp is a quasi-logarithmic 3-hourly
+index of global geomagnetic disturbance, and ap is its linear equivalent, so
+both are constant within each 3-hour interval.}
+\label{tab:features}
+\centering\small
+\begin{tabular}{p{0.24\linewidth}p{0.62\linewidth}}\toprule
+Group (count) & Features \\ \midrule
+\multicolumn{2}{l}{\emph{Static: shape $8$}} \\
+Position (4) & latitude, longitude, barometric and GPS altitude \\
+Geomagnetic (4) & geomagnetic latitude and longitude, cutoff rigidity $R_c$, L-shell \\ \midrule
+\multicolumn{2}{l}{\emph{Temporal: shape $T\times35$}} \\
+Neutron monitors (4) & Newark, Oulu, Thule, South Pole count rates \\
+Solar X-rays (2) & short- and long-wavelength flux \\
+Energetic particles (7) & protons $>$1, 5, 10, 30, 50, 100~MeV; electrons \\
+Solar wind (11) & $|B|$, $B_x$, $B_y$, $B_z$, speed and components, density, temperature, pressure \\
+Geomagnetic indices (3) & Kp, ap, Dst \\
+Solar activity (8) & sunspot number, F10.7, and Wilcox Solar Observatory north, south, and average polar field, each raw and 20~nHz low-pass filtered \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Flight-separated partitions. $A>15$ counts observations whose
+measured dose rate exceeds 15~$\mu$Sv/h. NAIRAS RMSE (in $\mu$Sv/h) is
+computed against ARMAS over all observations and over the high-dose subset.
+The partitions have similar high-dose fractions and NAIRAS errors, so any of
+them can serve as a fair test set.}
+\label{tab:partitions}
+\centering\small
+\begin{tabular}{lrrrr}\toprule
+ & & & \multicolumn{2}{c}{NAIRAS RMSE} \\ \cmidrule(l){4-5}
+Partition & Rows & $A>15$ & All & $A>15$ \\ \midrule
+P1 & 32,369 & 5,324 (16.4\%) & 4.08 & 7.16 \\
+P2 & 30,752 & 4,983 (16.2\%) & 4.07 & 6.87 \\
+P3 & 29,294 & 4,947 (16.9\%) & 3.99 & 6.50 \\ \midrule
+All & 92,415 & 15,254 (16.5\%) & 4.05 & 6.86 \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Exploratory Analysis: Where NAIRAS Fails}
+\label{sec:eda}
+
+Fig.~\ref{fig:nairas}a plots NAIRAS against ARMAS. Above 15~$\mu$Sv/h the
+cloud is nearly flat: the measured dose reaches 40~$\mu$Sv/h, while NAIRAS
+stays near 10--15~$\mu$Sv/h. Grouping the error $r=A-N$ by the measured dose
+(Fig.~\ref{fig:nairas}c) shows a median error that grows from negative values to
+$+17$~$\mu$Sv/h, whereas grouping by the NAIRAS estimate
+(Fig.~\ref{fig:nairas}d) gives a median near zero with an interquartile range
+of roughly 5~$\mu$Sv/h that straddles zero. The two views differ because
+selecting by the measured value also selects measurements that happened to be
+high. Together they show that NAIRAS is approximately unbiased for a given
+estimate but cannot distinguish high-dose flights from ordinary ones; the
+missing information must come from other inputs.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{e01_where_nairas_fails.png}
+\caption{NAIRAS V3 against ARMAS for all 92,415 observations.
+(a) NAIRAS versus measured dose; the dashed line is perfect agreement.
+(b) Distribution of the measured dose; 16.5\% exceeds 15~$\mu$Sv/h.
+(c, d) Error $A-N$ grouped in 2~$\mu$Sv/h bins of the measured dose (c) and of
+the NAIRAS estimate (d); lines are medians and bands span the 25th--75th
+percentiles. NAIRAS is nearly unbiased for a given estimate (d) but misses the
+highest measured doses (a, c).}
+\label{fig:nairas}
+\end{figure}
+
+\textbf{Geomagnetic shielding and altitude interact.}
+The distribution of measured dose has peaks near 4.5, 9.5, and
+15~$\mu$Sv/h (Fig.~\ref{fig:nairas}b) that correspond to different
+geomagnetic shielding: the median cutoff rigidity falls from 4.9 to 2.4 to
+1.8~GV across the three peaks at similar altitude. Fig.~\ref{fig:map} shows the
+flight tracks. Above 15~$\mu$Sv/h, 36\% of observations with $R_c<1$~GV
+qualify, but none with $R_c>10$~GV. Flights near Hawaii cruise highest
+(median 13.6~km) yet record the lowest dose (median 3.8~$\mu$Sv/h) because
+the shielding there is strong ($R_c\approx12$~GV). The dose therefore depends
+on interactions between inputs, which motivates a nonlinear model. Map (c)
+shows that high and low NAIRAS errors occur in the same regions, so location
+alone cannot explain the error.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.9\linewidth]{e02_flight_map.png}
+\caption{Flight tracks of all observations colored by (a) measured dose rate,
+(b) geomagnetic cutoff rigidity $R_c$ (low values mean weak magnetic
+shielding), and (c) NAIRAS error $A-N$ (red: NAIRAS too low). High doses
+concentrate where shielding is weak, but positive and negative NAIRAS errors
+are interleaved in the same regions, so the error depends on more than
+location.}
+\label{fig:map}
+\end{figure*}
+
+\textbf{Solar modulation.}
+Over the solar cycle, sunspot number and Oulu neutron-monitor counts are
+anticorrelated ($r=-0.76$ across flight-days), as expected from solar
+modulation of galactic cosmic rays (Appendix Fig.~\ref{fig:solar}). To
+remove the effect of location, we keep only observations with matched
+shielding and altitude ($R_c<1$~GV, 10.5--12~km) and only days with at least
+10 such observations, which leaves 43 flight-days. On these days NAIRAS follows the neutron-monitor counts closely
+($r=0.81$) and falls by 3.1~$\mu$Sv/h per 100 sunspots, the expected
+solar-modulation response, whereas ARMAS shows almost no dependence
+($r=-0.10$ with neutron-monitor counts; 0.06~$\mu$Sv/h per 100 sunspots).
+With only 43 matched flight-days we report this difference without
+attributing it to either the model or the instrument.
+\tbd{confirm with larger matched sample.}
+
+\textbf{Measurement characteristics.}
+In 56\% of consecutive records the ARMAS value is unchanged, so neighboring
+records are not independent. A random row-level split would place nearly
+identical records in training and test sets; we therefore keep the
+flight-separated partitions throughout. These repeats, and the conversion
+from silicon absorbed dose to effective dose, also imply an irreducible
+measurement noise floor.
+
+\textbf{Information in the history.}
+Appendix Fig.~\ref{fig:temporal}a measures how much each variable changes
+inside its window. Within one hour, 16 of the 35 variables are effectively
+constant, including the Kp and Ap indices (reported every three hours), the
+daily solar indices, and X-ray fluxes, so a 1-hour history can add little
+for them. Over 24 hours, the solar-wind magnetic field and velocity, Kp, Dst,
+and solar-wind pressure change by one to two standard deviations.
+Lead--lag maps of the Spearman correlation between the NAIRAS error and each
+variable at each lag (Appendix Fig.~\ref{fig:temporal}b,c) show that the
+strongest associations come from neutron-monitor counts ($|\rho|\approx0.17$)
+and are nearly constant across lags. In contrast, Kp and Ap are more strongly
+associated with the error about 15~h before the observation
+($\rho\approx0.12$) than at the observation time ($\rho\approx0.04$). These
+associations are weak individually, but they suggest that geomagnetic
+activity acts on the error with a delay of hours, which a 24-hour history can
+capture and a 1-hour history cannot.
+
+\subsection{Physics-Guided Residual Formulation}
+Let $X_i\in\mathbb{R}^{T\times35}$ be the environmental history ($T=12$ or
+24), $s_i\in\mathbb{R}^{8}$ the current flight and geomagnetic variables, and
+$N_i$ the NAIRAS estimate. The residual model learns the NAIRAS error and
+reconstructs the dose as
+\begin{equation}
+r_i = A_i - N_i, \qquad
+\hat{A}_i = N_i + f_\theta(X_i, s_i, N_i),
+\label{eq:residual}
+\end{equation}
+where $f_\theta$ is a network with parameters $\theta$. Direct models predict
+$A_i$ without $N_i$.
+
+\subsection{Temporal Transformer}
+Each time step is projected to a $d$-dimensional embedding with a positional
+encoding, and self-attention lets every step weigh every other,
+\begin{equation}
+\mathrm{Attn}(Q,K,V)=\mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d}}\right)V,
+\label{eq:attention}
+\end{equation}
+where $Q$, $K$, and $V$ are learned linear projections of the embeddings.
+\tbd{architecture details, diagram, parameter counts.}
+
+\subsection{Baselines}
+The baselines form a ladder in which each model adds one idea, so that each
+gain can be attributed. They are NAIRAS V3; a linear (ridge) residual
+correction; the static tree ensembles of K C \etal~\cite{kc2025}; a
+current-time MLP; a 1D-CNN and a hybrid CNN--MLP on the history; a
+TCN~\cite{bai2018}; and a direct Transformer that predicts $A$ without
+NAIRAS. On the static version of the dataset, the best static model of
+\cite{kc2025}, XGBoost, reached a test RMSE of $3.671\pm0.061$~$\mu$Sv/h
+against $4.045\pm0.087$ for NAIRAS, a 9.3\% reduction, with random forest
+($3.725\pm0.067$) and LASSO ($3.853\pm0.077$) behind it (mean $\pm$ standard
+deviation over partition rotations). That study did not report high-dose
+errors, which we add here. \tbd{final list and sizes.}
+
+\subsection{Training Objective}
+All networks minimize a weighted Huber loss~\cite{huber1964},
+\begin{equation}
+\mathcal{L}(\theta) = \frac{1}{n}\sum_{i=1}^{n} w_i\,
+\ell_\delta\!\left(y_i - \hat{y}_i\right), \qquad
+w_i = \begin{cases} w, & A_i > 15,\\ 1, & \text{otherwise,}\end{cases}
+\label{eq:huber}
+\end{equation}
+where $\ell_\delta$ is the Huber function and $y_i$ the standardized target.
+The weight $w$ is selected on validation data. \tbd{optimizer settings.}
+
+\section{Experiments and Results}
+\label{sec:experiments}
+
+\subsection{Protocol}
+Preprocessing statistics are fitted on the training partition only. Models
+and hyperparameters are selected on the validation partition, and the test
+partition is evaluated once. The three partitions rotate through the train,
+validation, and test roles. We report RMSE, MAE, and $R^2$ overall and for
+$A\leq15$ and $A>15$~$\mu$Sv/h, always comparing with NAIRAS on the same
+observations. \tbd{seeds and rotations.}
+
+\subsection{Main Results}
+Table~\ref{tab:results} reports test errors averaged over all six
+train--validation--test assignments of the three partitions and three random
+seeds. Using only the 43 current-time features, the residual MLP reduces RMSE
+by 7.6\% overall and 7.8\% above 15~$\mu$Sv/h relative to NAIRAS, while the
+direct MLP gains 5.0\% and 3.2\%. Learning the correction is also more
+stable: its standard deviation is 0.032 versus 0.096 for the direct MLP,
+whose worst assignment (P2 train, P1 validation, P3 test) is no better than
+NAIRAS. Neither MLP matches the static XGBoost of~\cite{kc2025}, which used
+the same current-time information. \tbd{temporal models.}
+
+\begin{table}[t]
+\caption{Test RMSE ($\mu$Sv/h, lower is better) as mean $\pm$ standard
+deviation over the six train--validation--test assignments of P1, P2, and
+P3 and three seeds (18 runs). ``All'' covers every test observation and $A>15$ the
+high-dose subset. Gain is the reduction in mean RMSE relative to NAIRAS V3.
+XGBoost is quoted from~\cite{kc2025} (static data; high-dose error not
+reported).}
+\label{tab:results}
+\centering\small
+\begin{tabular}{lccr}\toprule
+Model & All & $A>15$ & Gain all / $A>15$ (\%) \\ \midrule
+NAIRAS V3 & $4.044\pm0.040$ & $6.845\pm0.277$ & -- \\
+XGBoost~\cite{kc2025} & $3.671\pm0.061$ & -- & 9.3 \\
+MLP, direct & $3.842\pm0.096$ & $6.627\pm0.203$ & 5.0 / 3.2 \\
+MLP, residual & $3.737\pm0.032$ & $6.311\pm0.168$ & 7.6 / 7.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{1-Hour versus 24-Hour History}
+\tbd{error versus history length.}
+
+\subsection{Attention and Attribution}
+\tbd{attention maps and integrated gradients~\cite{sundararajan2017}.}
+
+\section{Conclusions}
+\label{sec:conclusions}
+\tbd{what we learned.} Limitations include the measurement noise floor
+described in Sec.~\ref{sec:eda} and correlation between records within a
+flight.
+
+\clearpage
+\section*{Peer Evaluation}
+This is an individual project; all work was performed by the author.
+
+{\small
+\bibliographystyle{ieee_fullname}
+\bibliography{references}
+}
+
+\clearpage
+\appendix
+\section{Additional Exploratory Figures}
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=0.85\linewidth]{e03_solar_cycle.png}
+\caption{Solar cycle and dose, one point per flight-day. (a) Sunspot number.
+(b) Oulu neutron-monitor counts, which move opposite to solar activity.
+(c) Daily median ARMAS and NAIRAS for matched conditions ($R_c<1$~GV,
+10.5--12~km altitude). (d) Mean NAIRAS error per flight-day (red: NAIRAS too
+low; blue: too high).}
+\label{fig:solar}
+\end{figure*}
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=0.95\linewidth]{e04_temporal_information.png}
+\caption{Information in the environmental history for all 92,415
+observations. (a) Median change of each variable inside its window (range
+divided by the variable's overall standard deviation) for the 1-hour,
+5-minute-cadence history (orange) and the 24-hour, hourly history (blue);
+zero means the history is flat. (b, c) Spearman correlation between the
+NAIRAS error $A-N$ and each variable at each lag, where column 0 is the
+observation time. Horizontal stripes mean the association does not depend on
+lag; Kp and Ap peak roughly 12--17~h before the observation.}
+\label{fig:temporal}
+\end{figure*}
+
+\end{document}

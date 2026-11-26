@@ -1,26 +1,27 @@
-# LaTeX report instructions
+# Report sources
 
-The complete report source is `Sanjib_KC_preliminary_project_report.tex`.
-It uses a standalone two-column layout and reads the executed neural figures
-from `../outputs/proposal_models_5m/` plus the target-distribution figure from
-`../outputs/armas_5m_full_study/`.
+| File | Purpose |
+|---|---|
+| `Sanjib_KC_final_project_report.tex` | Final report (due Dec 7, 2026), CVPR camera-ready format |
+| `Sanjib_KC_preliminary_project_report.tex` | Preliminary report (Oct 21, 2026), revised to the CVPR format |
+| `references.bib` | Bibliography for both reports |
+| `cvpr.sty`, `cvpr_eso.sty`, `eso-pic.sty`, `ieee_fullname.bst` | Official CVPR template files from the course |
 
-Before submission:
+Figures are read from `../figures/explore/` and `../figures/results/` (or a local
+`figures/` folder).
 
-1. Replace the email, PantherID, and repository URL placeholders.
-2. If the instructor provides the official CVPR template, copy the document
-   body into that template and retain the same figures, tables, equation, and
-   references.
-3. Upload `01_proposal_model_rmse.png`, `02_learning_curves.png`,
-   `03_best_observed_vs_predicted.png`, `04_transformer_occlusion.png`, and
-   `figure01_target_distribution.png` when compiling on Overleaf, then adjust
-   `\graphicspath` if they are placed in a different folder.
+## Compile
 
-Compile locally from the `latex` directory with:
+Locally:
 
-```text
-pdflatex Sanjib_KC_preliminary_project_report.tex
-pdflatex Sanjib_KC_preliminary_project_report.tex
+```bash
+pdflatex Sanjib_KC_final_project_report && bibtex Sanjib_KC_final_project_report && pdflatex Sanjib_KC_final_project_report && pdflatex Sanjib_KC_final_project_report
 ```
 
-The second pass resolves figure, table, and equation references.
+On Overleaf: upload this folder's files plus the PNGs from `figures/explore/` and
+`figures/results/` into a `figures/` folder, and set the main document to the
+final report.
+
+Red `[TBD: ...]` markers show unfinished parts; remove the `\tbd` macro before
+submission. Page limit: 4 pages of content; Peer Evaluation starts on page 5,
+then References, then the appendix.

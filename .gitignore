@@ -24,3 +24,11 @@ overleaf_upload.zip
 .env.*
 !.env.example
 
+
+# Local data (extracted from the V3 zips)
+data/
+*.zip
+.DS_Store
+
+# Course documents (kept locally, not published)
+docs/
