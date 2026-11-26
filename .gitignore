@@ -35,3 +35,6 @@ docs/
 
 # Per-run prediction arrays are large and regenerable from the training scripts
 results/**/pred_*.npy
+
+# Office lock files
+~$*
