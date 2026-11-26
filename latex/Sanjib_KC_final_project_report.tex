@@ -338,7 +338,11 @@ and hyperparameters are selected on the validation partition, and the test
 partition is evaluated once. The three partitions rotate through the train,
 validation, and test roles. We report RMSE, MAE, and $R^2$ overall and for
 $A\leq15$ and $A>15$~$\mu$Sv/h, always comparing with NAIRAS on the same
-observations. \tbd{seeds and rotations.}
+observations. Every model is trained on all six train--validation--test
+assignments with three random seeds, and we report the mean and standard
+deviation over these 18 runs. Code and instructions to reproduce all results
+are available at
+\url{https://github.com/thesanjibkc/Deep_learning_project/tree/final-project}.
 
 \subsection{Main Results}
 Table~\ref{tab:results} reports test errors averaged over all six

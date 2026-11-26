@@ -9,6 +9,7 @@ conditions, evaluated against in-flight ARMAS measurements.
 **Final report:** [`latex/Sanjib_KC_final_project_report.tex`](latex/Sanjib_KC_final_project_report.tex)
 (CVPR format; red `[TBD]` markers show unfinished parts)
 **Poster / slides:** [`poster/`](poster/)
+**Code (this branch):** https://github.com/thesanjibkc/Deep_learning_project/tree/final-project  
 **Learning notes:** [`LEARNING_LOG.md`](LEARNING_LOG.md)
 
 ---
