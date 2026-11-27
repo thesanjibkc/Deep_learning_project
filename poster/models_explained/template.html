@@ -1,0 +1,413 @@
+<title>How the Six Models Differ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: tutorial. Chapter pills on top, one large animated stage, a caption card, step controls. */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#132130; --muted:#5A6777; --line:#D8DEE6;
+  --accent:#0B7A85; --accent-soft:#D3ECEE; --storm:#C46E15; --meas:#B3261E; --nairas:#6A7684;
+  --cold:#2F6690; --mid:#E4E8ED; --hot:#E08A2B; --pos:#0B7A85; --neg:#B3261E;
+  --f-display:"Space Grotesk",system-ui,sans-serif; --f-body:"Inter",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D131A; --surface:#151F2A; --ink:#E5ECF3; --muted:#93A0AE; --line:#2A3644;
+  --accent:#3EC3CB; --accent-soft:#143A40; --storm:#F2A24D; --meas:#FF7B6E; --nairas:#9BA7B3;
+  --cold:#5091C2; --mid:#2A3543; --hot:#F2A24D; --pos:#3EC3CB; --neg:#FF7B6E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D131A; --surface:#151F2A; --ink:#E5ECF3; --muted:#93A0AE; --line:#2A3644;
+  --accent:#3EC3CB; --accent-soft:#143A40; --storm:#F2A24D; --meas:#FF7B6E; --nairas:#9BA7B3;
+  --cold:#5091C2; --mid:#2A3543; --hot:#F2A24D; --pos:#3EC3CB; --neg:#FF7B6E; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;gap:18px}
+h1,h2{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1{font-size:clamp(26px,4vw,36px);line-height:1.1}
+h2{font-size:20px}
+p{margin:0;max-width:72ch}
+.lead{color:var(--muted);font-size:15.5px}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.chapters{display:flex;flex-wrap:wrap;gap:6px}
+.ch{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.ch .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.ch[aria-current="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ch[aria-current="true"] .n{color:var(--bg);opacity:.7}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:12px}
+.svgbox{overflow-x:auto}
+#stage{width:100%;min-width:660px;height:auto;display:block}
+.cap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:start;background:var(--bg);border-radius:10px;padding:14px 16px}
+@media (max-width:700px){.cap{grid-template-columns:minmax(0,1fr)}}
+.cap .t{font-family:var(--f-display);font-weight:600;font-size:17px;margin-bottom:4px}
+.cap .s{font-size:15px}
+.cap .where{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);margin-bottom:4px}
+.controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:7px 12px;font-size:13.5px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:600}
+.btn:disabled{opacity:.4;cursor:default}
+.speed{font-size:12.5px;color:var(--muted);display:flex;gap:4px;align-items:center}
+.speed select{font:inherit;font-size:12.5px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:3px 4px}
+.progress{height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.note{font-size:13px;color:var(--muted)}
+svg text{font-family:var(--f-body);fill:var(--ink)}
+svg .mono{font-family:var(--f-mono)}
+svg .lbl{fill:var(--muted)}
+svg .fade{transition:opacity .5s ease}
+svg .move{transition:transform var(--mv,900ms) cubic-bezier(.35,.7,.25,1),opacity .4s}
+@media (prefers-reduced-motion:reduce){svg .fade,svg .move{transition:none}}
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:8px">
+    <div class="eyebrow">Basics tutorial · real numbers from the trained models</div>
+    <h1>How the Six Models Differ</h1>
+    <p class="lead">Follow one real reading through each network, from a single neuron up to the Transformer. Every number shown is the actual value inside the trained model for this reading. Press <b>Play</b>, or step with <b>Next</b>.</p>
+  </header>
+
+  <nav class="chapters" id="chapters" aria-label="Chapters"></nav>
+
+  <section class="stage">
+    <div class="progress" aria-hidden="true"><i id="prog"></i></div>
+    <div class="svgbox"><svg id="stage" viewBox="0 0 1000 540" role="img" aria-label="Animated tutorial diagram"></svg></div>
+    <div class="cap" aria-live="polite">
+      <div><div class="where" id="where"></div><div class="t" id="ctitle"></div><div class="s" id="ctext"></div></div>
+      <div class="controls">
+        <button class="btn" id="back" type="button">◀ Back</button>
+        <button class="btn primary" id="play" type="button">▶ Play</button>
+        <button class="btn" id="next" type="button">Next ▶</button>
+        <button class="btn" id="replay" type="button" title="Replay this step">↻</button>
+        <label class="speed" for="spd">Speed <select id="spd"><option value="1.6">slow</option><option value="1" selected>normal</option><option value="0.6">fast</option></select></label>
+      </div>
+    </div>
+  </section>
+  <p class="note">Model copies: trained on partitions P2 and P3, so this reading (in P1) is unseen test data. Values come from one trained copy (seed 42); the report averages three copies and six train/test splits, so its numbers differ slightly. µSv/h = microsieverts per hour.</p>
+</div>
+
+<script>
+const D = __DATA__;
+const NS='http://www.w3.org/2000/svg';
+const S=document.getElementById('stage');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const REDUCE=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let SPEED=1, timers=[];
+function el(tag,a={},p=S){const e=document.createElementNS(NS,tag);for(const k in a){if(k==='text')e.textContent=a[k];else if(k==='style')e.setAttribute('style',a[k]);else e.setAttribute(k,a[k]);}p.appendChild(e);return e;}
+function T(x,y,s,o={},p=S){return el('text',Object.assign({x,y,text:s,'font-size':o.size||13},o.attrs||{},o.anchor?{'text-anchor':o.anchor}:{},o.cls?{class:o.cls}:{},o.fill?{fill:o.fill}:{},o.weight?{'font-weight':o.weight}:{},o.op!==undefined?{opacity:o.op}:{}),p);}
+function at(ms,fn){if(REDUCE){fn();return;}timers.push(setTimeout(fn,ms*SPEED));}
+function show(e,ms){e.classList.add('fade');e.setAttribute('opacity',0);at(ms,()=>e.setAttribute('opacity',1));return e;}
+const f2=v=>(v>=0?'':'−')+Math.abs(v).toFixed(2);
+const sg=v=>(v>=0?'+':'−')+Math.abs(v).toFixed(2);
+function hex(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return[(n>>16)&255,(n>>8)&255,n&255];}
+function mix(a,b,t){return a.map((v,i)=>Math.round(v+(b[i]-v)*t));}
+function zcol(z){const c=hex(css('--cold')),m=hex(css('--mid')),h=hex(css('--hot'));const t=Math.max(-1,Math.min(1,z/2));return `rgb(${t<0?mix(m,c,-t):mix(m,h,t)})`;}
+function acol(v,max){const m=hex(css('--mid')),a=hex(css('--accent'));return `rgb(${mix(m,a,Math.min(1,Math.sqrt(Math.abs(v)/max)))})`;}
+const R=D.reading, M=D.models, ENV=D.env, KP=ENV.indexOf('Index_Kp');
+const NICE={Particles_P10:'Protons >10 MeV',Particles_P5:'Protons >5 MeV',Particles_P1:'Protons >1 MeV',Particles_P100:'Protons >100 MeV',SW_Bx:'Solar wind Bx',SW_Vx:'Solar wind Vx',SW_V:'Solar wind speed',Index_Dst:'Dst index',Index_Ap:'ap index',Index_Kp:'Kp index',NM_THUL:'Neutron monitor Thule','Altitude(GPS)':'GPS altitude','Altitude(Bar)':'Barometric altitude',Geomagnetic_Rc:'Cutoff rigidity Rc',NAIRAS:'NAIRAS estimate'};
+function nice(s){const m=s.match(/^(.*?)( \(now\)| (\d+) h ago)?$/);const base=NICE[m[1]]||m[1].replace(/_/g,' ');if(m[3])return `${base}, ${m[3]} h ago`;if(m[2])return `${base} (now)`;return base;}
+const GROUPS=[['Neutron monitors',0,3],['X-rays',4,5],['Particles',6,12],['Solar wind',13,23],['Kp, Dst, ap',24,26],['Solar activity',27,34]];
+const corr=D.corr_scale, dsc=D.dose_scale;
+
+/* ---------- reusable drawings ---------- */
+function doseBar(x,y,h,items){ // items: [{v,label,color}]
+  const g=el('g'); const max=25, Y=v=>y+h-(v/max)*h;
+  el('line',{x1:x,x2:x,y1:y,y2:y+h,stroke:css('--line'),'stroke-width':2},g);
+  [0,5,10,15,20,25].forEach(v=>{el('line',{x1:x-4,x2:x,y1:Y(v),y2:Y(v),stroke:css('--line')},g);T(x-8,Y(v)+4,v,{size:11,anchor:'end',cls:'lbl'},g);});
+  T(x-8,y-14,'µSv/h',{size:11,cls:'lbl',anchor:'end'},g);
+  items.forEach((it,k)=>{const r=el('rect',{x:x+8+k*44,y:Y(0),width:34,height:0,fill:it.color,rx:3},g);
+    r.style.transition=REDUCE?'none':'y .9s ease,height .9s ease';
+    at(150+k*250,()=>{r.setAttribute('y',Y(it.v));r.setAttribute('height',Y(0)-Y(it.v));});
+    const tv=T(x+25+k*44,Y(it.v)-6,it.v.toFixed(2),{size:12,anchor:'middle',cls:'mono',weight:600,fill:it.color},g);show(tv,400+k*250);
+    T(x+25+k*44,y+h+16,it.label,{size:11,anchor:'middle',cls:'lbl'},g);});
+  return g;
+}
+function grid(x,y,cw,ch,opts={}){ // rows = 35 variables, columns = 24 hours
+  const g=el('g'); const cells=[];
+  for(let v=0;v<35;v++){cells[v]=[];for(let t=0;t<24;t++){const r=el('rect',{x:x+t*cw,y:y+v*ch,width:cw-.6,height:ch-.6,fill:zcol(D.Z[t][v])},g);cells[v][t]=r;}}
+  if(opts.labels!==false){GROUPS.forEach(([n,a,b])=>{T(x-7,y+((a+b+1)/2)*ch+4,n,{size:10.5,anchor:'end',cls:'lbl'},g);el('line',{x1:x-3,x2:x-3,y1:y+a*ch+1,y2:y+(b+1)*ch-1,stroke:css('--line'),'stroke-width':2},g);});
+    [['23 h ago',0],['18 h',5],['12 h',11],['6 h',17],['now',23]].forEach(([s,t])=>T(x+(t+.5)*cw,y+35*ch+14,s,{size:10.5,anchor:'middle',cls:'lbl'},g));}
+  return {g,cells};
+}
+/* number-flow network: layers = [{x,title,nodes:[{v,name}],more,unit}] */
+function flowNet(layers,opts={}){
+  const g=el('g'); const top=opts.top||110, bot=opts.bot||420; const gapMs=opts.gap||1100; const t0=opts.t0||0;
+  const pos=layers.map(L=>L.nodes.map((n,k)=>[L.x, L.nodes.length===1?(top+bot)/2:top+k*((bot-top)/(L.nodes.length-1))]));
+  // edges
+  for(let i=0;i<layers.length-1;i++){const eg=el('g',{class:'fade',opacity:0},g);
+    pos[i].forEach(a=>pos[i+1].forEach(b=>el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:css('--line'),'stroke-width':1},eg)));
+    at(t0+i*gapMs,()=>eg.setAttribute('opacity',1));}
+  layers.forEach((L,i)=>{
+    const vmax=Math.max(...L.nodes.map(n=>Math.abs(n.v)),1e-6);
+    T(L.x,top-34,L.title,{size:12,anchor:'middle',weight:600},g);
+    if(L.sub)T(L.x,top-19,L.sub,{size:10.5,anchor:'middle',cls:'lbl'},g);
+    L.nodes.forEach((n,k)=>{const [x,y]=pos[i][k];
+      const c=el('circle',{cx:x,cy:y,r:L.r||13,fill:i===0&&!opts.colorInputs?css('--surface'):acol(n.v,vmax),stroke:css('--accent'),'stroke-width':1.3},g);
+      const tv=T(x,y+4,n.v.toFixed(2),{size:10,anchor:'middle',cls:'mono',weight:600,fill:Math.abs(n.v)/vmax>.6&&i>0?css('--bg'):css('--ink')},g);
+      if(n.name){T(L.side==='right'?x+20:x-20,y+4,n.name,{size:11,anchor:L.side==='right'?'start':'end'},g);}
+      if(i>0){c.setAttribute('opacity',.25);tv.setAttribute('opacity',0);c.classList.add('fade');tv.classList.add('fade');
+        at(t0+i*gapMs+650,()=>{c.setAttribute('opacity',1);tv.setAttribute('opacity',1);});}
+    });
+    if(L.more)T(L.x,bot+30,L.more,{size:10.5,anchor:'middle',cls:'lbl'},g);
+    // pulses toward next layer
+    if(i<layers.length-1){pos[i].forEach(a=>{pos[i+1].forEach((b,kk)=>{if(kk%2)return;const p=el('circle',{r:3,cx:0,cy:0,fill:css('--accent'),class:'move',opacity:0},g);
+      p.style.setProperty('--mv',(650*SPEED)+'ms');p.style.transform=`translate(${a[0]}px,${a[1]}px)`;
+      at(t0+i*gapMs+30,()=>{p.setAttribute('opacity',1);p.style.transform=`translate(${b[0]}px,${b[1]}px)`;});
+      at(t0+i*gapMs+700,()=>p.setAttribute('opacity',0));});});}
+  });
+  return {g,pos};
+}
+function topk(arr,k){return arr.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]).slice(0,k);}
+function convert(x,y,m,sc,label,base,t0=0){ // standard units -> µSv/h, using the model's exact values
+  const g=el('g'); const z=m.z, val=m.value;
+  const lines=[[`network output (standard units)`,`${z.toFixed(3)}`],[`× ${sc.sd.toFixed(2)}  + ${f2(sc.mu)}  (undo standardizing)`,`= ${val.toFixed(2)} µSv/h`]];
+  if(base!==null)lines.push([`${label}: NAIRAS ${base.toFixed(2)} ${sg(val)}`,`= ${m.dose.toFixed(2)} µSv/h`]);
+  else lines.push([label,`= ${m.dose.toFixed(2)} µSv/h`]);
+  lines.forEach(([a,b],k)=>{const t1=T(x,y+k*26,a,{size:12.5},g),t2=T(x+330,y+k*26,b,{size:13.5,cls:'mono',weight:600,anchor:'end',fill:k===lines.length-1?css('--accent'):css('--ink')},g);show(t1,t0+k*700);show(t2,t0+k*700+250);});
+  return g;
+}
+function headFlow(parts,m,t0,x0=560){ // parts: [{v:[..],title}] summary vectors → 64 → output
+  const L=[];
+  const h=topk(m.h,5).map(([v,i])=>({v}));
+  L.push({x:x0,title:'joined',sub:parts.map(p=>p.title).join(' + '),nodes:parts.flatMap(p=>topk(p.v.map(Math.abs),2).map(([_,i])=>({v:p.v[i]}))),more:`${parts.reduce((s,p)=>s+p.v.length,0)} numbers`});
+  L.push({x:x0+140,title:'hidden',sub:'64 neurons',nodes:h,more:`${m.h.filter(v=>v>0).length} of 64 on`});
+  L.push({x:x0+260,title:'output',sub:'1 number',nodes:[{v:m.z}],r:18});
+  return flowNet(L,{top:150,bot:360,t0,gap:900});
+}
+
+/* ---------- chapters ---------- */
+const CH=[];
+const ch=(id,name,steps)=>CH.push({id,name,steps});
+
+ch('problem','The problem',[
+ {t:'One real reading',s:`A G-IV business jet over Florida at 13.2 km, ${R.time}, the morning after a severe geomagnetic storm. The ARMAS instrument measured ${R.A} µSv/h. The physics model NAIRAS estimated ${R.N}. Our models must predict the measured value.`,
+  d(){T(60,70,'The reading',{size:16,weight:600});
+   [['When',R.time],['Where',`${R.lat}°N, ${Math.abs(R.lon)}°W (Florida)`],['Altitude',`${R.alt_km} km`],['Cutoff rigidity Rc',`${R.rc} GV (medium magnetic shielding)`],['Storm',`Kp peaked at 8.3 about 17 hours earlier`]].forEach(([a,b],k)=>{T(60,110+k*30,a,{size:13,cls:'lbl'});show(T(230,110+k*30,b,{size:14,weight:500}),200+k*250);});
+   doseBar(700,90,330,[{v:R.N,label:'NAIRAS',color:css('--nairas')},{v:R.A,label:'measured',color:css('--meas')}]);
+   show(T(60,330,`NAIRAS is ${(R.A-R.N).toFixed(2)} µSv/h too low here.`,{size:17,weight:600,fill:css('--meas')}),1600);}},
+ {t:'Our trick: predict only the correction',s:`Instead of learning the dose from scratch, most of our models learn how far NAIRAS is off and add that to NAIRAS. NAIRAS is never an input to the networks: it is only the starting point the correction is added to. Here the perfect correction would be +${(R.A-R.N).toFixed(2)}. This is called a residual (physics-guided) model.`,
+  d(){const y=200;
+   const parts=[[`${R.A}`,'measured',css('--meas')],['=',''],[`${R.N}`,'NAIRAS (physics)',css('--nairas')],['+',''],[`${(R.A-R.N).toFixed(2)}`,'correction: what the network learns',css('--accent')]];
+   let x=120;parts.forEach(([v,l,c],k)=>{const big=l!=='';const w=big?190:50;const t=T(x+w/2,y,v,{size:big?40:34,anchor:'middle',cls:'mono',weight:600,fill:c||css('--ink')});show(t,k*350);if(l){show(T(x+w/2,y+34,l,{size:12.5,anchor:'middle',cls:'lbl'}),k*350+150);}x+=w;});
+   show(T(500,330,'Network output + NAIRAS = predicted dose',{size:16,anchor:'middle',weight:600}),1900);}},
+]);
+
+const MN=M.mlp.neuron;
+ch('neuron','1 · One neuron',[
+ {t:'Inputs are standardized first',s:`Every input is rescaled so that 0 means "average" and +1 means "one standard deviation above average". At 06:24 the >10 MeV proton flux was ${M.mlp.inputs[M.mlp.input_names.indexOf('Particles_P10 (now)')].toFixed(2)}, almost 4 standard deviations above normal: the storm also brought energetic particles.`,
+  d(){T(60,70,'5 of the 43 inputs to the MLP (standardized)',{size:15,weight:600});
+   MN.terms.forEach((tm,k)=>{const y=120+k*58;T(60,y+5,nice(tm.name),{size:14});
+     const x0=430, sc=40; el('line',{x1:x0,x2:x0,y1:y-18,y2:y+18,stroke:css('--line')});
+     const b=el('rect',{x:tm.x>=0?x0:x0+tm.x*sc,y:y-10,width:0,height:20,fill:tm.x>=0?css('--hot'):css('--cold'),rx:2});
+     b.style.transition=REDUCE?'none':'width .8s ease';at(200+k*200,()=>b.setAttribute('width',Math.abs(tm.x)*sc));
+     show(T(tm.x>=0?x0+tm.x*sc+8:x0+tm.x*sc-8,y+5,tm.x.toFixed(2),{size:13,cls:'mono',weight:600,anchor:tm.x>=0?'start':'end'}),500+k*200);});
+   T(430,430,'0 = average',{size:11,cls:'lbl',anchor:'middle'});}},
+ {t:'Multiply each input by its weight',s:`A neuron gives every input its own weight, learned in training, and multiplies. Neuron #${MN.neuron} of the first layer responds most to the solar wind, energetic protons, and the Dst storm index. The other ${MN.n_inputs-5} inputs and a bias add the rest.`,
+  d(){neuronCalc(false);}},
+ {t:'Add up, then switch on or off (ReLU)',s:`The neuron adds all products and the bias: ${MN.sum.toFixed(2)}. Then the ReLU rule: if the sum is negative, output 0 (neuron off); otherwise pass it on. Here ${MN.sum.toFixed(2)} > 0, so this neuron fires with ${MN.relu.toFixed(2)}. That is all one neuron does.`,
+  d(){neuronCalc(true);}},
+]);
+function neuronCalc(sum){
+  const xN=640,yN=270;
+  T(60,60,`Neuron #${MN.neuron}, first layer of the MLP`,{size:15,weight:600});
+  T(80,92,'input x',{size:11,cls:'lbl'});T(330,92,'weight w',{size:11,cls:'lbl'});T(470,92,'x × w',{size:11,cls:'lbl'});
+  MN.terms.forEach((tm,k)=>{const y=125+k*48;
+    T(80,y,nice(tm.name),{size:12.5});T(80,y+16,tm.x.toFixed(2),{size:12,cls:'mono',fill:css('--muted')});
+    el('line',{x1:545,y1:y,x2:xN-30,y2:yN,stroke:css('--line'),'stroke-width':1+Math.abs(tm.w)*12});
+    T(330,y+4,`× ${tm.w.toFixed(3)}`,{size:12.5,cls:'mono'});
+    const p=T(470,y+4,`= ${sg(tm.wx)}`,{size:13,cls:'mono',weight:600,fill:tm.wx>=0?css('--pos'):css('--neg')});if(!sum)show(p,300+k*450);
+    if(!sum){const dot=el('circle',{r:4,fill:css('--accent'),class:'move',opacity:0});dot.style.setProperty('--mv',(700*SPEED)+'ms');dot.style.transform=`translate(545px,${y}px)`;
+      at(300+k*450,()=>{dot.setAttribute('opacity',1);dot.style.transform=`translate(${xN-30}px,${yN}px)`;});at(1050+k*450,()=>dot.setAttribute('opacity',0));}});
+  const y6=125+5*48;
+  T(80,y6,`${MN.n_inputs-5} other inputs`,{size:12.5,cls:'lbl'});const r1=T(470,y6+4,`= ${sg(MN.rest)}`,{size:13,cls:'mono',weight:600});
+  T(80,y6+34,'bias',{size:12.5,cls:'lbl'});const r2=T(470,y6+38,`= ${sg(MN.bias)}`,{size:13,cls:'mono',weight:600});
+  if(!sum){show(r1,2600);show(r2,2900);}
+  el('circle',{cx:xN,cy:yN,r:30,fill:sum?css('--accent'):css('--surface'),stroke:css('--accent'),'stroke-width':2});
+  T(xN,yN+5,'Σ',{size:22,anchor:'middle',weight:600,fill:sum?css('--bg'):css('--ink')});
+  if(sum){
+    el('line',{x1:400,x2:560,y1:y6+60,y2:y6+60,stroke:css('--ink')});
+    const s=T(470,y6+82,`sum = ${MN.sum.toFixed(2)}`,{size:15,cls:'mono',weight:600,anchor:'middle'});show(s,200);
+    // ReLU graph
+    const gx=720,gy=yN-70,gw=150,gh=120;
+    el('line',{x1:gx,x2:gx+gw,y1:gy+gh-30,y2:gy+gh-30,stroke:css('--line')});el('line',{x1:gx+gw/2,x2:gx+gw/2,y1:gy,y2:gy+gh,stroke:css('--line')});
+    el('polyline',{points:`${gx},${gy+gh-30} ${gx+gw/2},${gy+gh-30} ${gx+gw},${gy+gh-30-75}`,fill:'none',stroke:css('--accent'),'stroke-width':3});
+    T(gx+gw/2,gy-10,'ReLU: negative → 0',{size:12,anchor:'middle',weight:600});
+    const px=gx+gw/2+Math.min(MN.sum,1)*75, py=gy+gh-30-Math.min(MN.sum,1)*75;
+    show(el('circle',{cx:px,cy:py,r:6,fill:css('--storm')}),900);
+    el('line',{x1:xN+30,x2:gx-6,y1:yN,y2:yN,stroke:css('--accent'),'stroke-width':2});
+    show(T(xN+90,yN+120,`output = ${MN.relu.toFixed(2)}  (neuron on)`,{size:16,cls:'mono',weight:600,anchor:'middle',fill:css('--accent')}),1400);
+  }
+}
+
+function mlpChapter(key,title,isDirect){
+  const m=M[key];
+  const inNames=['Protons >10 MeV (now)','GPS altitude','Cutoff rigidity Rc','Kp index (now)','Dst index (now)','Solar wind speed (now)'];
+  const raw=['Particles_P10 (now)','Altitude(GPS)','Geomagnetic_Rc','Index_Kp (now)','Index_Dst (now)','SW_V (now)'];
+  const ins=raw.map((r,k)=>({v:m.inputs[m.input_names.indexOf(r)],name:inNames[k]}));
+  const h1=topk(m.h1,5).map(([v])=>({v})), h2=topk(m.h2,5).map(([v])=>({v}));
+  const layers=[{x:250,title:'inputs',sub:`${m.inputs.length} numbers`,nodes:ins,more:`+${m.inputs.length-6} more inputs`},
+    {x:440,title:'layer 1',sub:'128 neurons',nodes:h1,more:`${m.active1} of 128 on (top 5 shown)`},
+    {x:620,title:'layer 2',sub:'64 neurons',nodes:h2,more:`${m.active2} of 64 on`},
+    {x:780,title:'output',sub:isDirect?'the dose':'the correction',nodes:[{v:m.z}],r:20}];
+  return layers;
+}
+ch('mlp','2 · MLP (no history)',[
+ {t:'Many neurons in layers',s:`The MLP stacks neurons: 43 inputs feed 128 neurons, which feed 64, which feed one output. It sees only the reading's moment (the 43 values at 06:24); NAIRAS is not an input. Watch the real numbers move through: each circle shows a neuron's actual value; the brighter, the larger.`,
+  d(){flowNet(mlpChapter('mlp'),{gap:1300});}},
+ {t:'From the output to a dose',s:`The output is in standard units, so we undo the standardizing to get µSv/h, then add NAIRAS. The MLP's correction is ${sg(M.mlp.value)} µSv/h, so it predicts ${M.mlp.dose.toFixed(2)}. Measured: ${R.A}.`,
+  d(){flowNet(mlpChapter('mlp'),{gap:0});convert(560,468,M.mlp,corr,'dose',R.N,300);}},
+]);
+ch('direct','3 · MLP, direct',[
+ {t:'Same network, same inputs, different target',s:'The direct MLP gets exactly the same 43 inputs and has the same layers. The only difference is what it is trained to output: the dose itself, learned from scratch, instead of the correction to NAIRAS. So comparing the two tests one thing only: does starting from physics help?',
+  d(){flowNet(mlpChapter('direct','',true),{gap:1300});}},
+ {t:'Its answer, and why it matters',s:`Its output converts straight to a dose: ${M.direct.dose.toFixed(2)} µSv/h. On this one reading it is close to NAIRAS, but over the full test the residual MLP is better (3.740 vs 3.842 µSv/h RMSE) and twice as stable: starting from physics helps.`,
+  d(){flowNet(mlpChapter('direct','',true),{gap:0});convert(560,468,M.direct,dsc,'predicted dose',null,300);}},
+]);
+
+ch('grid','4 · The 24-hour history',[
+ {t:'35 variables × 24 hours',s:'The next four models also get the past 24 hours: 35 space-weather variables (rows) measured each hour (columns). Orange = above normal, blue = below. The Kp storm row is outlined: it peaked at 8.3 about 16 to 18 hours before the reading.',
+  d(){const G=grid(250,70,24,10);el('rect',{x:249,y:70+KP*10-1,width:24*24+1,height:11,fill:'none',stroke:css('--storm'),'stroke-width':2});
+   T(250+24*24+10,70+KP*10+8,'Kp: 8.3 → 0.3',{size:12,fill:css('--storm'),weight:600});
+   T(250,52,'Same reading, past 24 hours (840 numbers)',{size:14,weight:600});
+   for(let t=0;t<24;t++)for(let v=0;v<35;v++){G.cells[v][t].setAttribute('opacity',0);G.cells[v][t].classList.add('fade');at(t*60,()=>G.cells[v][t].setAttribute('opacity',1));}}},
+ {t:'How do you feed a grid to a network?',s:'Four answers, one per model. Flat MLP: pour all 840 numbers into one list. CNN–MLP: slide a 3-hour window along time. TCN: look back in growing jumps. Transformer: let the present ask every hour how important it is.',
+  d(){grid(60,70,13,8);const ys=[90,170,250,330];
+   [['Flat MLP','one long list, no time order'],['CNN–MLP','3-hour window slides along time'],['TCN','looks back 1, 2, 4, 8 hours'],['Transformer','weighs every hour (attention)']].forEach(([a,b],k)=>{
+     const g=el('g');show(g,300+k*500);el('rect',{x:440,y:ys[k]-26,width:480,height:56,rx:8,fill:css('--accent-soft'),stroke:css('--accent')},g);
+     T(460,ys[k]-2,a,{size:16,weight:600},g);T(460,ys[k]+18,b,{size:13,cls:'lbl'},g);});}},
+]);
+
+const FN=M.flat.neuron;
+ch('flat','5 · Flat MLP',[
+ {t:'Pour the grid into one list',s:'The Flat MLP lays the 24 hour-columns end to end: 24 × 35 = 840 numbers, plus 8 flight values = 848 inputs. Watch the columns line up.',
+  d(){const ghost=grid(250,70,24,10,{labels:false});ghost.g.setAttribute('opacity',.18);
+   T(250,58,'the 35 × 24 grid',{size:12,cls:'lbl'});
+   const G=grid(250,70,24,10,{labels:false});
+   const px=i=>150+i*(700/840);
+   for(let t=0;t<=24;t++){const l=el('line',{x1:px(t*35),x2:px(t*35),y1:418,y2:446,stroke:css('--ink'),'stroke-width':.8,class:'fade',opacity:0});at(2000,()=>l.setAttribute('opacity',.6));}
+   show(T(px(0),410,'← 23 h ago (35 values per hour block)',{size:10.5,cls:'lbl'}),2100);show(T(px(840),410,'now →',{size:10.5,anchor:'end',cls:'lbl'}),2100);
+   [[5*35+KP,'#176 = Kp 18 h ago (8.3)'],[23*35+KP,'#806 = Kp now (0.3)']].forEach(([i,s],k)=>{const g=el('g');show(g,2700+k*300);
+     el('line',{x1:px(i),x2:px(i),y1:448,y2:470+k*0,stroke:css('--storm'),'stroke-width':2},g);T(px(i),484,s,{size:11.5,anchor:k?'end':'start',fill:css('--storm'),weight:600},g);});
+   for(let t=0;t<24;t++)for(let v=0;v<35;v++){const r=G.cells[v][t];r.classList.add('move');r.style.setProperty('--mv',(1100*SPEED)+'ms');
+     const tx=(150+ (t*35+v)*(700/840))-(250+t*24), ty=430-(70+v*10);
+     at(300+t*70,()=>{r.style.transformBox='fill-box';r.style.transform=`translate(${tx}px,${ty}px) scale(${(700/840)/24*1.8},1.6)`;});}
+   show(T(150,463,'#1',{size:11,cls:'lbl'}),2200);show(T(850,463,'#840',{size:11,cls:'lbl',anchor:'end'}),2200);
+   show(T(500,515,'Hours and variables are now just positions in a list',{size:14,anchor:'middle',weight:600}),3200);}},
+ {t:'Every hour gets its own weight',s:`Look at neuron #${FN.neuron}: two of its biggest inputs are "ap 17 h ago" and "ap 16 h ago": the same storm index one hour apart, yet one gets a positive weight and the other a negative one. Each hour has its own separately learned weight, so it must learn what ap means 24 separate times, once per hour, from a few hundred training flights. That is 56,513 weights.`,
+  d(){T(60,60,`Neuron #${FN.neuron}, first layer of the Flat MLP (848 inputs)`,{size:15,weight:600});
+   T(80,95,'input',{size:11,cls:'lbl'});T(430,95,'value x',{size:11,cls:'lbl'});T(560,95,'weight w',{size:11,cls:'lbl'});T(690,95,'x × w',{size:11,cls:'lbl'});
+   FN.terms.forEach((tm,k)=>{const y=130+k*44;const g=el('g');show(g,200+k*350);
+     T(80,y,nice(tm.name),{size:14},g);T(430,y,tm.x.toFixed(2),{size:13,cls:'mono'},g);T(560,y,`× ${tm.w.toFixed(3)}`,{size:13,cls:'mono'},g);T(690,y,`= ${sg(tm.wx)}`,{size:13,cls:'mono',weight:600,fill:tm.wx>=0?css('--pos'):css('--neg')},g);});
+   const g=el('g');show(g,2100);T(80,130+5*44,`${FN.n_inputs-5} other inputs + bias`,{size:13,cls:'lbl'},g);T(690,130+5*44,`= ${sg(FN.rest+FN.bias)}`,{size:13,cls:'mono',weight:600},g);
+   el('line',{x1:640,x2:800,y1:130+5*44+16,y2:130+5*44+16,stroke:css('--ink')},g);T(690,130+5*44+40,`sum ${FN.sum.toFixed(2)} → ReLU ${FN.relu.toFixed(2)}`,{size:14,cls:'mono',weight:600,fill:css('--accent')},g);
+   const n=el('g');show(n,2600);el('rect',{x:80,y:430,width:840,height:56,rx:8,fill:css('--accent-soft')},n);
+   T(100,454,'"ap 17 h ago" and "ap 16 h ago" are unrelated slots to this network: weights +0.036 and −0.029.',{size:13.5,weight:600},n);
+   T(100,474,'It cannot reuse what it learned about ap from one hour at another hour.',{size:13,cls:'lbl'},n);}},
+ {t:'Its answer',s:`848 inputs → 64 → 32 → 1. Correction ${sg(M.flat.value)} µSv/h, so ${M.flat.dose.toFixed(2)} here. Over the full test it is the worst network (3.909), worse than no history at all (3.740): with so many separate weights it memorizes the training flights. Same data as the Transformer, no time order.`,
+  d(){const h1=topk(M.flat.h1,5).map(([v])=>({v})),h2=topk(M.flat.h2,4).map(([v])=>({v}));
+   flowNet([{x:250,title:'inputs',sub:'848 numbers',nodes:FN.terms.map(t=>({v:t.x,name:nice(t.name)})),more:'+843 more'},{x:450,title:'layer 1',sub:'64 neurons',nodes:h1,more:`${M.flat.h1.filter(v=>v>0).length} of 64 on`},{x:620,title:'layer 2',sub:'32 neurons',nodes:h2,more:`${M.flat.h2.filter(v=>v>0).length} of 32 on`},{x:770,title:'output',sub:'correction',nodes:[{v:M.flat.z}],r:20}],{gap:1100});
+   convert(560,468,M.flat,corr,'dose',R.N,3400);}},
+]);
+
+const C=M.cnn;
+function featMap(x,y,mat,cw,ch,title,t0=0,cols=true){ // mat: 16 x 24
+  const g=el('g');T(x,y-8,title,{size:12,weight:600},g);const mx=Math.max(...mat.flat().map(Math.abs),1e-6);const rs=[];
+  for(let c=0;c<mat.length;c++)for(let t=0;t<mat[0].length;t++){const r=el('rect',{x:x+t*cw,y:y+c*ch,width:cw-.5,height:ch-.5,fill:acol(mat[c][t],mx)},g);if(cols){r.setAttribute('opacity',0);r.classList.add('fade');at(t0+t*110,()=>r.setAttribute('opacity',1));}}
+  return g;
+}
+ch('cnn','6 · CNN–MLP',[
+ {t:'Slide a 3-hour window',s:'A small filter covers 3 neighboring hours (all 35 rows) and slides along the 24 hours. At each position it outputs 16 numbers (16 learned pattern detectors). The same filter is reused everywhere, so it learns one detector instead of 24 copies.',
+  d(){const G=grid(150,60,18,8);const box=el('rect',{x:149,y:57,width:3*18+1,height:35*8+6,fill:'none',stroke:css('--accent'),'stroke-width':2.5,rx:3,class:'move'});box.style.setProperty('--mv',(200*SPEED)+'ms');
+   for(let t=0;t<22;t++)at(200+t*110,()=>box.style.transform=`translateX(${t*18}px)`);
+   featMap(150,400,C.c1,18,6,'layer 1 output: 16 detectors × 24 hours (real values)',250);
+   T(150+24*18+12,404,'brighter = detector fired more',{size:11,cls:'lbl'});}},
+ {t:'Second filter, then summarize',s:'A second 3-hour filter runs over the first map. Then the 24 hours are summarized two ways: the average over all hours and the value at the last hour, 16 + 16 = 32 numbers.',
+  d(){featMap(80,90,C.c1,15,7,'layer 1',0,false);featMap(80,250,C.c2,15,7,'layer 2 (second filter)',0);
+   const mx=Math.max(...C.mean.map(Math.abs),...C.last.map(Math.abs));
+   const g=el('g');show(g,2800);T(520,90,'average over 24 hours',{size:12,weight:600},g);T(520,250,'last hour (06:24)',{size:12,weight:600},g);
+   C.mean.forEach((v,k)=>el('rect',{x:520+k*16,y:100,width:14,height:40,fill:acol(v,mx)},g));C.last.forEach((v,k)=>el('rect',{x:520+k*16,y:260,width:14,height:40,fill:acol(v,mx)},g));
+   T(520,170,C.mean.slice(0,5).map(v=>v.toFixed(2)).join('  ')+' …',{size:11,cls:'mono lbl'},g);T(520,330,C.last.slice(0,5).map(v=>v.toFixed(2)).join('  ')+' …',{size:11,cls:'mono lbl'},g);}},
+ {t:'Join with the flight now, and answer',s:`The 32-number history summary is joined with 32 numbers from the current-time branch (the 8 flight values through one layer), then 64 neurons and one output. Correction ${sg(C.value)}, so ${C.dose.toFixed(2)} here. Over the full test 3.667, the best of all six models.`,
+  d(){headFlow([{v:C.mean.concat(C.last),title:'history 32'},{v:C.cur,title:'flight now 32'}],C,0,300);convert(560,468,C,corr,'dose',R.N,2600);}},
+]);
+
+const K=M.tcn;
+ch('tcn','7 · TCN',[
+ {t:'Look back in growing jumps',s:'Each layer combines an hour with earlier hours only (never the future). Layer 1 looks 1 hour back, layer 2 two, layer 3 four, layer 4 eight. Each strip is the real output of that layer (16 numbers per hour); the lines show which hours feed 06:24.',
+  d(){const x0=200,w=24,y0=80,gap=78;
+   K.layers.forEach((L,k)=>{const g=featMap(x0,y0+k*gap,L,w,3,k===0?'input projection (16 per hour)':`layer ${k}: jump ${K.dilations[k-1]} h`,k*700);});
+   let fr=[23];for(let k=4;k>=1;k--){const d=K.dilations[k-1];const nf=new Set();fr.forEach(t=>[t,t-d,t-2*d].forEach(s=>{if(s>=0){const l=el('line',{x1:x0+(s+.5)*w,y1:y0+(k-1)*gap+48,x2:x0+(t+.5)*w,y2:y0+k*gap,stroke:css('--accent'),'stroke-width':1.4,class:'fade',opacity:0});at(3500+(4-k)*500,()=>l.setAttribute('opacity',.9));nf.add(s);}}));fr=[...nf];}
+   show(T(x0+24*w+10,y0+4*gap+28,'06:24 now depends on all 24 hours',{size:12.5,weight:600,fill:css('--accent')}),5600);}},
+ {t:'Use the last hour, and answer',s:`Only the last hour's 16 numbers are kept and joined with the current-time branch. Correction ${sg(K.value)}, so ${K.dose.toFixed(2)} here. Over the full test 3.679, tied within noise with the CNN–MLP and the Transformer.`,
+  d(){headFlow([{v:K.last,title:'last hour 16'},{v:K.cur,title:'flight now 32'}],K,0,300);convert(560,468,K,corr,'dose',R.N,2600);}},
+]);
+
+const TF=M.trf;
+ch('trf','8 · Transformer',[
+ {t:'Each hour becomes a token',s:'Each hour-column (35 values) is turned into a token: 16 numbers that summarize that hour, plus a tag for its position in time. A special summary token S is added; it will collect information from all hours.',
+  d(){featMap(200,90,TF.tokens[0].map((_,c)=>TF.tokens.map(r=>r[c])),24,9,'24 tokens × 16 numbers (real values)',0);
+   [['23 h ago',0],['now',23]].forEach(([s,t])=>T(200+(t+.5)*24,252,s,{size:11,anchor:'middle',cls:'lbl'}));
+   const s=el('g');show(s,2900);el('circle',{cx:850,cy:160,r:26,fill:css('--accent')},s);T(850,166,'S',{size:18,anchor:'middle',weight:700,fill:css('--bg')},s);T(850,206,'summary token',{size:12,anchor:'middle',cls:'lbl'},s);}},
+ {t:'Attention: S asks every hour',s:`S scores every hour and turns the scores into weights that add up to 1. Bar height = the real weight from the second attention layer. The largest weights go to 2 hours before and to 16 and 17 hours before, the latter right next to the Kp peak (orange). Nobody told it about storms. The differences are modest: every hour gets between 3% and 5% of the attention.`,
+  d(){const a=TF.att[1],x0=150,w=28,base=360,sc=4200;const mx=Math.max(...a);
+   el('line',{x1:x0,x2:x0+24*w,y1:base,y2:base,stroke:css('--line')});
+   el('line',{x1:x0,x2:x0+24*w,y1:base-sc/24,y2:base-sc/24,stroke:css('--muted'),'stroke-dasharray':'4 3'});T(x0+24*w+8,base-sc/24+4,'equal weight (1/24)',{size:11,cls:'lbl'});
+   a.forEach((v,t)=>{const r=el('rect',{x:x0+t*w+3,y:base,width:w-6,height:0,fill:v>=[...a].sort((p,q)=>q-p)[2]?css('--accent'):acol(v-.02,mx-.02),rx:2});r.style.transition=REDUCE?'none':'y .7s ease,height .7s ease';
+     at(150+t*90,()=>{r.setAttribute('y',base-v*sc);r.setAttribute('height',v*sc);});
+     if(v>=[...a].sort((p,q)=>q-p)[2])show(T(x0+(t+.5)*w,base-v*sc-6,v.toFixed(3),{size:10.5,anchor:'middle',cls:'mono',weight:600}),2400);
+     const l=el('line',{x1:x0+12*w,y1:110,x2:x0+(t+.5)*w,y2:base-v*sc,stroke:css('--accent'),'stroke-width':v*90,opacity:0,class:'fade'});at(2400+t*30,()=>l.setAttribute('opacity',.35));});
+   const s=el('g');el('circle',{cx:x0+12*w,cy:95,r:20,fill:css('--accent')},s);T(x0+12*w,101,'S',{size:16,anchor:'middle',weight:700,fill:css('--bg')},s);
+   const ky=410,kh=70;el('polyline',{points:D.raw_kp.map((k,t)=>`${x0+(t+.5)*w},${ky+kh-(k/9)*kh}`).join(' '),fill:'none',stroke:css('--storm'),'stroke-width':2.5});
+   T(x0+24*w+8,ky+kh-(8.3/9)*kh+4,'Kp (peak 8.3)',{size:12,fill:css('--storm'),weight:600});
+   [['23 h ago',0],['17 h',6],['12 h',11],['6 h',17],['now',23]].forEach(([s2,t])=>T(x0+(t+.5)*w,ky+kh+16,s2,{size:11,anchor:'middle',cls:'lbl'}));}},
+ {t:'Weighted summary, and answer',s:`S becomes the weighted mix of all hours: 16 numbers. Joined with the current-time branch: correction ${sg(TF.value)}, so ${TF.dose.toFixed(2)} here. Over the whole storm flight (801 readings) the Transformer is the most accurate model (RMSE 3.84 vs 4.12 for NAIRAS), and over the full test 3.683.`,
+  d(){headFlow([{v:TF.s,title:'S 16'},{v:TF.cur,title:'flight now 32'}],TF,0,300);convert(560,468,TF,corr,'dose',R.N,2600);}},
+]);
+
+ch('summary','Summary',[
+ {t:'All six on this reading',s:`Every model starts from the same reading. On this single reading all are 6 to 8 µSv/h too low: the measurement jumps from minute to minute in ways no input explains. Differences between models show up only over many readings, next step.`,
+  d(){const ks=[['direct','MLP direct'],['mlp','MLP'],['flat','Flat MLP'],['cnn','CNN–MLP'],['tcn','TCN'],['trf','Transformer']];
+   doseBar(140,80,330,[{v:R.N,label:'NAIRAS',color:css('--nairas')}].concat(ks.map(([k,n])=>({v:M[k].dose,label:n,color:css('--accent')}))).concat([{v:R.A,label:'measured',color:css('--meas')}]));}},
+ {t:'What decides the winner: thousands of readings',s:'Test RMSE over about 92,000 readings and 18 runs (lower is better). Predicting the correction instead of the dose helps (direct → MLP). Adding history without time order hurts (Flat MLP). Reading history in time order wins (CNN–MLP, TCN, Transformer), with only 7 to 10 thousand weights and seconds of training.',
+  d(){const rows=[['NAIRAS (physics)',4.044,css('--nairas'),'—'],['MLP, direct',3.842,css('--muted'),'no history, predicts the dose · 13,953 weights · 2.5 s'],['MLP (no history)',3.740,css('--muted'),'+ correction target · 13,953 weights · 2.0 s'],['Flat MLP',3.909,css('--meas'),'+ history, no time order · 56,449 weights · 1.8 s'],['CNN–MLP',3.667,css('--accent'),'+ time order · 6,993 weights · 3.3 s'],['TCN',3.679,css('--accent'),'+ time order · 10,337 weights · 8.4 s'],['Transformer',3.683,css('--accent'),'+ time order · 8,961 weights · 28.8 s']];
+   const x0=250,sc=(v)=>(v-3.5)*1080;
+   rows.forEach(([n,v,c,why],k)=>{const y=80+k*52;T(x0-12,y+16,n,{size:14,anchor:'end',weight:500});
+     const r=el('rect',{x:x0,y,width:0,height:24,fill:c,rx:3});r.style.transition=REDUCE?'none':'width .8s ease';at(150+k*220,()=>r.setAttribute('width',sc(v)));
+     show(T(x0+sc(v)+8,y+17,v.toFixed(3),{size:13,cls:'mono',weight:600}),500+k*220);show(T(x0,y+38,why,{size:11,cls:'lbl'}),600+k*220);});
+   T(x0,470,'24-hour versions (1-hour within 0.04) · weights = trainable parameters · s = training time per run on a laptop GPU · bars start at 3.5 µSv/h',{size:11,cls:'lbl'});}},
+]);
+
+/* ---------- engine ---------- */
+let ci=0, si=0, playing=false, playT=null;
+const nav=document.getElementById('chapters');
+CH.forEach((c,i)=>{const b=document.createElement('button');b.className='ch';b.type='button';b.innerHTML=`<span>${c.name}</span>`;b.onclick=()=>{stop();go(i,0);};nav.appendChild(b);});
+const total=CH.reduce((s,c)=>s+c.steps.length,0);
+function flatIndex(){let n=0;for(let i=0;i<ci;i++)n+=CH[i].steps.length;return n+si;}
+function render(){
+  timers.forEach(clearTimeout);timers=[];S.innerHTML='';
+  const c=CH[ci], st=c.steps[si];
+  st.d();
+  document.getElementById('where').textContent=`${c.name} · step ${si+1} of ${c.steps.length}`;
+  document.getElementById('ctitle').textContent=st.t;
+  document.getElementById('ctext').textContent=st.s;
+  [...nav.children].forEach((b,i)=>b.setAttribute('aria-current',i===ci));
+  document.getElementById('prog').style.width=((flatIndex()+1)/total*100)+'%';
+  document.getElementById('back').disabled=flatIndex()===0;
+  document.getElementById('next').disabled=flatIndex()===total-1;
+}
+function go(i,s){ci=i;si=s;render();}
+function next(){if(si<CH[ci].steps.length-1)si++;else if(ci<CH.length-1){ci++;si=0;}else{stop();return;}render();}
+function back(){if(si>0)si--;else if(ci>0){ci--;si=CH[ci].steps.length-1;}render();}
+function stop(){playing=false;clearTimeout(playT);document.getElementById('play').textContent='▶ Play';}
+function dwell(){const t=CH[ci].steps[si].s.length;return Math.max(6500,t*55)*SPEED;}
+function loop(){playT=setTimeout(()=>{if(!playing)return;if(flatIndex()===total-1){stop();return;}next();loop();},dwell());}
+document.getElementById('play').onclick=()=>{if(playing){stop();return;}playing=true;document.getElementById('play').textContent='❚❚ Pause';render();loop();};
+document.getElementById('next').onclick=()=>{stop();next();};
+document.getElementById('back').onclick=()=>{stop();back();};
+document.getElementById('replay').onclick=()=>render();
+document.getElementById('spd').onchange=e=>{SPEED=+e.target.value;render();};
+document.addEventListener('keydown',e=>{if(e.target.closest('select'))return;if(e.key==='ArrowRight'){stop();next();}if(e.key==='ArrowLeft'){stop();back();}});
+render();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+</script>

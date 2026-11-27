@@ -241,13 +241,13 @@ function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+.3275911*x);return s
 const gelu=x=>.5*x*(1+erf(x/Math.SQRT2));
 function lin(x,w,b,nin,nout){const o=new Float32Array(nout);for(let j=0;j<nout;j++){let s=b[j];const base=j*nin;for(let i=0;i<nin;i++)s+=w[base+i]*x[i];o[j]=s;}return o;}
 function headOut(z,w){const h=lin(z,w["out.0.weight"],w["out.0.bias"],z.length,64).map(relu);return lin(h,w["out.3.weight"],w["out.3.bias"],64,1)[0];}
-const curEnc=(xc,w)=>lin(xc,w["cur.net.0.weight"],w["cur.net.0.bias"],9,32).map(relu);
+const curEnc=(xc,w)=>lin(xc,w["cur.net.0.weight"],w["cur.net.0.bias"],8,32).map(relu);
 function toCT(z){const X=new Float32Array(NV*NT);for(let t=0;t<NT;t++)for(let v=0;v<NV;v++)X[v*NT+t]=z[t][v];return X;}
-function fMLP(inp){const w=WT.mlp,h1=lin(inp.xb,w["net.0.weight"],w["net.0.bias"],44,128).map(relu),h2=lin(h1,w["net.3.weight"],w["net.3.bias"],128,64).map(relu);
+function fMLP(inp){const w=WT.mlp,h1=lin(inp.xb,w["net.0.weight"],w["net.0.bias"],43,128).map(relu),h2=lin(h1,w["net.3.weight"],w["net.3.bias"],128,64).map(relu);
   return{o:lin(h2,w["net.6.weight"],w["net.6.bias"],64,1)[0],int:{h1:Array.from(h1),h2:Array.from(h2)}};}
-function fFlat(inp){const w=WT.flat,x=new Float32Array(849);for(let t=0;t<NT;t++)for(let v=0;v<NV;v++)x[t*NV+v]=inp.z[t][v];for(let i=0;i<9;i++)x[840+i]=inp.xc[i];
-  const W0=w["net.0.weight"],h1=lin(x,W0,w["net.0.bias"],849,64).map(relu),h2=lin(h1,w["net.3.weight"],w["net.3.bias"],64,32).map(relu);
-  const hour=new Float32Array(NT);let tot=0;for(let u=0;u<64;u++)for(let t=0;t<NT;t++)for(let v=0;v<NV;v++){const c=Math.abs(W0[u*849+t*NV+v]*x[t*NV+v]);hour[t]+=c;tot+=c;}
+function fFlat(inp){const w=WT.flat,x=new Float32Array(848);for(let t=0;t<NT;t++)for(let v=0;v<NV;v++)x[t*NV+v]=inp.z[t][v];for(let i=0;i<8;i++)x[840+i]=inp.xc[i];
+  const W0=w["net.0.weight"],h1=lin(x,W0,w["net.0.bias"],848,64).map(relu),h2=lin(h1,w["net.3.weight"],w["net.3.bias"],64,32).map(relu);
+  const hour=new Float32Array(NT);let tot=0;for(let u=0;u<64;u++)for(let t=0;t<NT;t++)for(let v=0;v<NV;v++){const c=Math.abs(W0[u*848+t*NV+v]*x[t*NV+v]);hour[t]+=c;tot+=c;}
   return{o:lin(h2,w["net.6.weight"],w["net.6.bias"],32,1)[0],int:{hour:Array.from(hour,v=>v/tot),h1:Array.from(h1)}};}
 function convSame(X,cin,cout,w,b){const o=new Float32Array(cout*NT);for(let co=0;co<cout;co++)for(let t=0;t<NT;t++){let s=b[co];for(let ci=0;ci<cin;ci++)for(let k=0;k<3;k++){const tt=t+k-1;if(tt<0||tt>=NT)continue;s+=w[(co*cin+ci)*3+k]*X[ci*NT+tt];}o[co*NT+t]=s;}return o;}
 function fCNN(inp){const w=WT.cnn,X=toCT(inp.z),c1=convSame(X,NV,16,w["conv.0.weight"],w["conv.0.bias"]).map(relu),c2=convSame(c1,16,16,w["conv.3.weight"],w["conv.3.bias"]).map(relu);
@@ -423,7 +423,7 @@ function inputs(g,sn,o){
   const cy=ky+50;el("rect",{x:40,y:cy,width:372,height:76,rx:10,fill:css("--soft")},g);
   T(g,54,cy+19,"Where the plane is",{size:13,bold:true});
   T(g,54,cy+38,`altitude ${f1(sn.alt)} km · shield Rc ${f1(sn.rc)} GV`,{size:13});T(g,54,cy+55,`lat ${sn.lat}°, lon ${sn.lon}°`,{size:13});
-  T(g,54,cy+71,`NAIRAS estimate: ${sn.N} µSv/h`,{size:13,bold:true,color:col("nairas")});
+  T(g,54,cy+71,`NAIRAS ${sn.N} µSv/h (added at the end, not an input)`,{size:13,bold:true,color:col("nairas")});
   return{gx:x0,cw,gy};
 }
 function ruler(g,sn,key,sN,sP,sA){
@@ -521,14 +521,14 @@ function caption(k,st,sn){
   if(k==="nairas")return [`NAIRAS is a physics model. From the aircraft's altitude (${f1(sn.alt)} km), the magnetic shield (Rc ${f1(sn.rc)} GV) and conditions in space it computes the dose by tracing cosmic rays through the field and atmosphere.`,
     `It contains no learning at all. Its estimate for this moment is ${f1(sn.N)} µSv/h. The 24-hour history on the left is not part of it.`,
     `The instrument measured ${sn.A} µSv/h, so NAIRAS is ${f1(Math.abs(sn.A-sn.N))} µSv/h too ${sn.A>sn.N?"low":"high"} here. The networks learn corrections like this one.`][st-1];
-  if(k==="mlp")return [`Only the present goes in: 8 position and shield numbers, the 35 space-weather readings right now (the last column), and NAIRAS's estimate. The 23 earlier hours are ignored, so this model cannot see a storm that already happened.`,
-    `128 artificial neurons mix those 44 numbers. Brighter dots are more active for this moment.`,`64 neurons combine the first layer's patterns into higher-level ones.`,out][st-1];
+  if(k==="mlp")return [`Only the present goes in: 8 position and shield numbers and the 35 space-weather readings right now (the last column). NAIRAS is not an input; it is only added to the output. The 23 earlier hours are ignored, so this model cannot see a storm that already happened.`,
+    `128 artificial neurons mix those 43 numbers. Brighter dots are more active for this moment.`,`64 neurons combine the first layer's patterns into higher-level ones.`,out][st-1];
   if(k==="flat"){const h=sn.int.flat.hour,mx=Math.max(...h),mn=Math.min(...h);
-    return [`All 24 hours go in: 24 × 35 = 840 numbers, plus position and NAIRAS.`,
+    return [`All 24 hours go in: 24 × 35 = 840 numbers, plus the 8 position and shield numbers.`,
     `The numbers are unrolled into one long row and every position gets its own weight, so the network does not know that neighbouring hours are related. Here the most-used hour carries ${f1(mx*100)}% of the weight and the least-used ${f1(mn*100)}%: almost flat, no hour stands out.`,
     `64 neurons mix all 840 numbers. With ${M.flat.params.toLocaleString("en-US")} parameters and only a few hundred training flights, this network memorises instead of learning.`,out][st-1];}
   if(k==="cnn")return [`The 24 hours go in as 24 columns of 35 readings.`,`A small filter looks at 3 hours at a time and slides along the history, learning patterns such as "Kp jumps" or "wind speed falls". 16 filters run in parallel and fill in the map on the right.`,
-    `Each filter's response is averaged over the 24 hours, and its last-hour value is kept too.`,`These summaries are combined with the position and NAIRAS. ${out}`][st-1];
+    `Each filter's response is averaged over the 24 hours, and its last-hour value is kept too.`,`These summaries are combined with the position and shield numbers. ${out}`][st-1];
   if(k==="tcn")return [`The 24 hours go in.`,`Each layer looks further back by skipping hours: gaps of 1, 2, 4 and 8 hours. Layers only look backwards in time. Brightness shows how active each hour is in that layer.`,
     `So the last hour's node sees the previous 5 hours, then 13, then the whole 24 as layers stack: a long memory with few parameters (${M.tcn.params.toLocaleString("en-US")}).`,out][st-1];
   const att=sn.int[k].att[state.layer],avg=att[0].map((_,t)=>att.reduce((a,h)=>a+h[t],0)/att.length);
@@ -536,7 +536,7 @@ function caption(k,st,sn){
   return [`Each hour becomes a token: its 35 readings turned into a small vector. A learned summary token at the top will collect what matters.`,
     `The summary token asks every hour: how relevant are you to the correction? At first every hour looks alike.`,
     `Softmax turns the scores into weights that add up to 1. Beam thickness is the real learned weight (layer ${state.layer+1}, averaged over 4 heads). For this moment it leans most on ${topHours(avg).join(" and ")}.`,
-    `The summary is an attention-weighted blend of the hours, joined with the position and NAIRAS, and a small network turns it into the correction. ${out}${w}`][st-1];
+    `The summary is an attention-weighted blend of the hours, joined with the position and shield numbers, and a small network turns it into the correction. ${out}${w}`][st-1];
 }
 function drawCmp(){
   const svg=$("#cmp");svg.innerHTML="";const x0=230,x1=850,vmax=Math.max(26,Math.ceil(Math.max(VM.A,...NETS.map(k=>VM.preds[k]))/2)*2+2),V=v=>x0+v/vmax*(x1-x0),muted=css("--muted"),ink=css("--ink"),line=css("--line");

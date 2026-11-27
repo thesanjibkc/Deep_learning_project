@@ -56,11 +56,11 @@ logv = [i for i, n in enumerate(env) if n.startswith(("SXR", "Particles"))]
 seq[:, :, logv] = np.log10(np.clip(seq[:, :, logv], 1e-12, None))
 s_seq = Scaler().fit(seq[m["train"]])
 Z = s_seq(seq).astype(np.float32)                                   # n, T, V (standardized)
-cur_t = np.concatenate([d["static"], N_ALL[:, None]], 1)
+cur_t = d["static"]                                                 # NAIRAS is not a network input
 s_cur = Scaler().fit(cur_t[m["train"]])
 Xc = s_cur(cur_t).astype(np.float32)
 y = A_ALL - N_ALL; mu, sd = float(y[m["train"]].mean()), float(y[m["train"]].std())
-xb = np.concatenate([d["current"], N_ALL[:, None]], 1)                # basic MLP residual input (44)
+xb = d["current"]                                                   # basic MLP residual input (43)
 s_b = Scaler().fit(xb[m["train"]]); Xb = s_b(xb).astype(np.float32)
 
 
@@ -83,7 +83,7 @@ wdir = ROOT / f"results/temporal_final_weighted/1H/rot{ROT}_seed{SEED}"
 bdir = ROOT / f"results/basic/rot{ROT}_seed{SEED}"
 nc = Xc.shape[1]
 net = {
-    "mlp": load_sd(BasicMLP(44), bdir / "MLP_(residual).pt"),
+    "mlp": load_sd(BasicMLP(43), bdir / "MLP_(residual).pt"),
     "flat": load_sd(FlatMLP(T, V, nc, width=16, p=0.3), tdir / "FlatMLP_residual.pt"),
     "cnn": load_sd(CNNMLP(T, V, nc, width=16, p=0.3), tdir / "CNN-MLP_residual.pt"),
     "tcn": load_sd(TCN(T, V, nc, width=16, p=0.3), tdir / "TCN_residual.pt"),

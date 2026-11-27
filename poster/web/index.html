@@ -293,14 +293,14 @@ function drawAtt(){
   let txt="";
   if(aStep===1) txt=aWin===24?"In the 24-hour window you can see the storm: Kp jumps, Dst plunges and the solar wind's Bz turns sharply southward about 18 hours before the flight.":"In the 1-hour window the storm has already passed. Every token looks the same, so there is nothing for attention to choose between.";
   if(aStep===2) txt=flat?"Attention spreads evenly over all tokens: with identical tokens, no moment is more informative than another.":`Attention concentrates on the storm hours. The largest weight falls ${ago} before the flight.`;
-  if(aStep===3) txt=`The attention summary, plus altitude (${S.alt_km} km), shielding (Rc ${S.rc} GV) and the NAIRAS estimate (${S.N} µSv/h), feeds a small network that predicts the correction. ARMAS measured ${S.A} µSv/h, so the ideal correction here is +${fmt(S.A-S.N,1)} µSv/h.`;
+  if(aStep===3) txt=`The attention summary, plus altitude (${S.alt_km} km) and shielding (Rc ${S.rc} GV), feeds a small network that predicts the correction, which is added to the NAIRAS estimate (${S.N} µSv/h). ARMAS measured ${S.A} µSv/h, so the ideal correction here is +${fmt(S.A-S.N,1)} µSv/h.`;
   $("#att-text").textContent=txt;
 }
 
 /* ---------- Play 4 ---------- */
 function drawCards(){
   const C=[["Cutoff rigidity (Rc)","How strong Earth's magnetic shield is at a place","The minimum momentum per charge a cosmic ray needs to get through. Near 0 GV at the poles, above 10 GV near the equator."],
-    ["Residual learning","What does the network actually predict?","The correction r = ARMAS − NAIRAS. Final estimate = NAIRAS + r. It was more accurate and four times more stable than predicting ARMAS directly."],
+    ["Residual learning","What does the network actually predict?","The correction r = ARMAS − NAIRAS. Final estimate = NAIRAS + r. NAIRAS is not an input. With the same inputs, it was more accurate and twice as stable as predicting ARMAS directly."],
     ["Token","What one input step is in our Transformer","The 35 space-weather readings at one moment. The 1-hour model sees 12 tokens, the 24-hour model 24."],
     ["Attention","How the model picks important moments","Each token scores every other (query · key), softmax turns scores into weights that sum to 1, and the model takes the weighted average."],
     ["Solar modulation","Why a quiet Sun means more dose","An active Sun's solar wind pushes galactic cosmic rays away. When the Sun is quiet, about 10% more reach Earth."],

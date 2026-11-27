@@ -220,7 +220,7 @@ function bars(host,rows,ref){
 }
 function drawResults(){const R=D.final_results_18_runs, a=css("--amber"),t=css("--teal"),g=css("--gray"),r=css("--red"),m=css("--muted");
   bars($("#res1"),[["NAIRAS physics model",R["NAIRAS V3"],g],["Flat MLP, 24 h",R["Flat MLP 24h"],r],["MLP, no history",R["MLP no history"],t],
-    ["XGBoost 2025 (cited)",R["XGBoost 2025 (cited)"],m],["Transformer, 24 h",R["Transformer 24h"],a],["TCN, 24 h",R["TCN 24h"],a]]);
+    ["XGBoost 2025 (cited)",R["XGBoost 2025 (cited)"],m],["Transformer, 24 h",R["Transformer 24h"],a],["TCN, 24 h",R["TCN 24h"],a],["CNN–MLP, 24 h",R["CNN-MLP 24h"],a]]);
   const H=R.high_dose;
   bars($("#res2"),[["NAIRAS physics model",H["NAIRAS V3"],g],["MLP, no history",H["MLP no history"],t],["Transformer, 24 h",H["Transformer 24h"],a],
     ["Transformer + high-dose weight",H["Transformer + high-dose weight 1h"],a]]);}
