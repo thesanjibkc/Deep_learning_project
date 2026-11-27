@@ -528,7 +528,7 @@ def fig_occlusion_models():
     a.set_yticks(range(len(top))); a.set_yticklabels([NICE.get(t_, t_) for t_ in top], fontsize=6.5)
     a.set_title("(a) variable occlusion, 24 h (MLP: no history)")
     cb = fig.colorbar(im, ax=a, pad=0.02, fraction=0.05); cb.ax.tick_params(labelsize=6)
-    cb.set_label("$\\Delta$RMSE", fontsize=6.5)
+    cb.ax.set_title("$\\Delta$RMSE", fontsize=6.5, pad=3)   # title, not side label: a side label collided with panel (b)
     for k, (L, unit, step, title) in enumerate(((l24, "hours", 1, "(b) time-step occlusion, 24 h"),
                                                 (l1, "minutes", 5, "(c) time-step occlusion, 1 h"))):
         a = fig.add_subplot(gs[k + 1])

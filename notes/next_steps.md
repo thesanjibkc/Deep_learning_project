@@ -18,7 +18,7 @@ Read `CLAUDE.md` first (rules, pipeline, links). This file is the status and to-
   weighting "matches the MLP overall" (+0.08 vs unweighted Transformer); residual beats direct clearly for MLP, narrowly for Transformer
 
 ## To do (in this order)
-1. **Open the slides in PowerPoint** and check slides 8–16 (they were patched with python-pptx; Claude cannot render them).
+1. **Slides now 18** (added: what the correction relies on; occlusion). Export to PDF from PowerPoint so Claude can check the real render; then check slides 1–18 (they were patched with python-pptx; Claude cannot render them).
    Print and rehearse (~2 min per slide).
 2. **Share the four pages** from each page's Share menu (tutorial, attention animation, Model Zoo, Dose Lab), otherwise the
    QR codes on slides 8, 9, 14 only work for you. Test one QR with a phone.

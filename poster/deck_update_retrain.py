@@ -6,8 +6,8 @@ Patches the existing, possibly hand-edited deck in place (run after poster/deck_
   slide 11  chart values and cards (best model CNN-MLP, 24 h)
   slide 12  cards and notes (figure is replaced by deck_update_results.py)
   slide 13  ablation table
-  slide 14  training-dynamics figure and best epoch
-  slide 16  conclusion wording
+  slide 16  training-dynamics figure and best epoch
+  slide 18  conclusion wording
 Numbers come from results/ (18-run means) and results/final/significance.csv; idempotent.
 """
 import json
@@ -99,16 +99,16 @@ for i, r in enumerate(rows, start=1):
     for j, v in enumerate(r):
         tbl.cell(i, j).text_frame.paragraphs[0].runs[0].text = v
 
-# ---- slide 14: training dynamics
-s14 = S(14); old = shape(s14, "Picture 5")
+# ---- slide 16 (was 14): training dynamics
+s14 = S(16); old = shape(s14, "Picture 5")
 x, y, w, h = old.left, old.top, old.width, old.height
 old._element.getparent().remove(old._element)
 pic = s14.shapes.add_picture(str(ROOT / "figures/results/T1_training_evolution.png"), x, y, w, h); pic.name = "Picture 5"
 set_runs(shape(s14, "TextBox 6"), f"By epoch {best}: ", "it peaks 16–18 h before the flight, exactly where Kp hit 8.3.", para=1)
 
-# ---- slide 16: conclusion wording
-set_runs(shape(S(16), "TextBox 7"), "With the same inputs, learning NAIRAS's correction beat learning the dose: clearly for the MLP, narrowly for the Transformer.")
-set_runs(shape(S(16), "TextBox 13"), "Weighting high doses cut their error by 19% vs NAIRAS while matching the MLP overall.")
+# ---- slide 18 (was 16): conclusion wording
+set_runs(shape(S(18), "TextBox 7"), "With the same inputs, learning NAIRAS's correction beat learning the dose: clearly for the MLP, narrowly for the Transformer.")
+set_runs(shape(S(18), "TextBox 13"), "Weighting high doses cut their error by 19% vs NAIRAS while matching the MLP overall.")
 
 prs.save(DECK)
 print("patched", DECK, "best epoch", best)

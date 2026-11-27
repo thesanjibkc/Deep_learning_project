@@ -3,9 +3,9 @@
 Text and layout, idempotent, keeps each run's formatting. Run after deck_update_results.py and deck_update_retrain.py.
   slide 1   title: temporal networks (the best overall model is the CNN-MLP, not the Transformer)
   slide 9   layout: move the caption and Kp label off the Kp bars
-  layout    slides 8, 11, 14, 15, 16: remove text/figure overlaps (see 'overlap scan' below); slide 14 'overfits'
+  layout    slides 8, 11, 16, 17, 18 (18-slide numbering): remove text/figure overlaps (see 'overlap scan' below); slide 16 'overfits'
   slide 12  weighted Transformer: matches the MLP overall (ensembles, +0.01 n.s.) but +0.08 vs unweighted Transformer
-  slide 16  residual vs direct: clear for the MLP, narrow for the Transformer; Flat MLP overfit
+  slide 18  residual vs direct: clear for the MLP, narrow for the Transformer; Flat MLP overfit
 """
 import sys
 from pathlib import Path
@@ -37,10 +37,10 @@ S(12).notes_slide.notes_text_frame.text = (
     "MLP overall (+0.01, not significant); against the unweighted Transformer it costs +0.08 overall. All models still "
     "underpredict the highest doses. XGBoost 2025 did not report high-dose error.")
 
-set_runs(shape(S(16), "TextBox 7"),
+set_runs(shape(S(18), "TextBox 7"),
          "With the same inputs, learning NAIRAS's correction beat learning the dose: clearly for the MLP, narrowly for the Transformer.")
-set_runs(shape(S(16), "TextBox 10"), "Small, regularized temporal networks beat a no-history MLP; a flat, larger network overfit.")
-set_runs(shape(S(16), "TextBox 13"), "Weighting high doses cut their error by 19% vs NAIRAS while matching the MLP overall.")
+set_runs(shape(S(18), "TextBox 10"), "Small, regularized temporal networks beat a no-history MLP; a flat, larger network overfit.")
+set_runs(shape(S(18), "TextBox 13"), "Weighting high doses cut their error by 19% vs NAIRAS while matching the MLP overall.")
 
 # slide 9 layout: caption and Kp label overlapped the Kp bars (bars span y 5.32-6.15 in)
 from pptx.util import Inches
@@ -57,14 +57,14 @@ def place(slide, name, x, y, w=None, h=None):
 place(8, "TextBox 10", 0.72, 6.16, h=0.28)             # NAIRAS card: "physics model" collided with "no training"
 place(8, "TextBox 11", 0.72, 6.40, h=0.28)
 place(11, "Chart 5", 0.50, 1.55, h=5.15)              # chart bottom ran under its caption
-place(14, "Picture 5", 0.79, 1.50, 7.42, 5.18)        # opaque figure covered its caption (aspect kept)
-place(14, "TextBox 9", 0.60, 6.70)
-place(15, "Picture 5", 2.65, 1.50, 8.04, 3.78)        # opaque figure covered the tops of the three cards (aspect kept)
+place(16, "Picture 5", 0.79, 1.50, 7.42, 5.18)        # opaque figure covered its caption (aspect kept)
+place(16, "TextBox 9", 0.60, 6.70)
+place(17, "Picture 5", 2.65, 1.50, 8.04, 3.78)        # opaque figure covered the tops of the three cards (aspect kept)
 for card, text in (("Rounded Rectangle 11", "TextBox 13"), ("Rounded Rectangle 14", "TextBox 16")):
-    place(16, card, shape(S(16), card).left / 914400, 3.60, h=1.38)   # cards end above the "Code on GitHub" label
-    place(16, text, shape(S(16), text).left / 914400, 4.32, h=0.62)
-place(14, "TextBox 6", 8.85, 1.80, h=3.40)            # side text box frame ended under the two QR images
-set_runs(shape(S(14), "TextBox 6"), "Flat MLP: ", "even weights; overfits after epoch 4.", para=2)
+    place(18, card, shape(S(18), card).left / 914400, 3.60, h=1.38)   # cards end above the "Code on GitHub" label
+    place(18, text, shape(S(18), text).left / 914400, 4.32, h=0.62)
+place(16, "TextBox 6", 8.85, 1.80, h=3.40)            # side text box frame ended under the two QR images
+set_runs(shape(S(16), "TextBox 6"), "Flat MLP: ", "even weights; overfits after epoch 4.", para=2)
 
 prs.save(DECK)
 print("patched", DECK)

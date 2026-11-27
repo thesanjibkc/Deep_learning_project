@@ -4,8 +4,8 @@ hand-edited deck instead of rebuilding it with build_deck.py).
   slide 12  replace the high-dose bar chart with the NAIRAS-vs-best-models figure
             (figures/results/R4_best_vs_nairas.png); stat cards move to a bottom row,
             middle card now shows the underprediction rate above 15 uSv/h
-  slide 15  refreshed 'why some error remains' figure (six-split averages) and cards
-  slide 16  conclusion card 4 now states what drives the correction and whose history matters
+  slide 17  refreshed 'why some error remains' figure (six-split averages) and cards
+  slide 18  conclusion card 4 now states what drives the correction and whose history matters
 
 Usage: python3 poster/deck_update_results.py [path/to/deck.pptx]
 Idempotent: the slide-12 picture is named UPD_best; re-running replaces it.
@@ -54,7 +54,7 @@ def replace_picture(slide, old, img, name, x, y, w, h=None):
 
 
 prs = Presentation(DECK)
-s12, s15, s16 = prs.slides[11], prs.slides[14], prs.slides[15]
+s12, s15, s16 = prs.slides[11], prs.slides[16], prs.slides[17]   # 18-slide deck: old 15/16 are now 17/18
 
 # ---- slide 12: figure on top, three cards in a bottom row
 for nm in ("Chart 5", "TextBox 6"):                        # old bar chart and its caption
@@ -83,8 +83,8 @@ s12.notes_slide.notes_text_frame.text = (
 pic = shape(s15, "Picture 5")
 replace_picture(s15, pic, ROOT / "figures/results/E1_why_error.png", "Picture 5", 2.07, 1.5, 9.15, 4.3) \
     if pic is not None else None
-set_text(shape(s15, "TextBox 7"), "Solar wind")
-set_text(shape(s15, "TextBox 8"), "only history adding beyond its current value; NM counts act as a level")
+set_text(shape(s15, "TextBox 7"), "< 1%")
+set_text(shape(s15, "TextBox 8"), "of the remaining error is explained by altitude, shielding or storm level")
 set_text(shape(s15, "TextBox 10"), "83%")
 set_text(shape(s15, "TextBox 11"), "of remaining error varies minute to minute within a flight: noise")
 set_text(shape(s15, "TextBox 13"), "15% → 5%")

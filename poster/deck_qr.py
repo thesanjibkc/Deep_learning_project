@@ -43,8 +43,8 @@ def add_zoo_qr(prs):
         s = slides[idx]
         pic = s.shapes.add_picture(str(img), Inches(11.55), Inches(0.3), width=Inches(1.2)); pic.name = "QR_zoo_img"
         _label(s, 8.9, 0.62, 2.5, line, size=12, bold=True, color=NAVY, name="QR_zoo_label")
-    # slide 14: beside the GitHub code
-    s = slides[13]
+    # slide 16 (was 14): beside the GitHub code
+    s = slides[15]   # 18-slide deck: the attention slide (was 14)
     for sh in list(s.shapes):                                # replace the old caption that mentioned only GitHub
         if sh.has_text_frame and sh.text_frame.text.startswith("Live animation on the laptop"):
             sh._element.getparent().remove(sh._element)
