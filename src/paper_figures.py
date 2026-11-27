@@ -208,7 +208,8 @@ def fig_temporal():
     a = fig.add_subplot(gs[0])
     a.barh(y - 0.2, move5[order], 0.4, color=ORANGE, label="1-hour window")
     a.barh(y + 0.2, move1[order], 0.4, color=BLUE, label="24-hour window")
-    a.set_yticks(y); a.set_yticklabels(names, fontsize=5.5); a.invert_yaxis()
+    a.set_yticks(y); a.set_yticklabels(names, fontsize=5.5)
+    a.set_ylim(34.5, -0.5)                        # same rows as the heatmaps in (b, c), top = first
     a.set_xlabel("median change in window\n(range / std)"); a.set_title("(a)")
     a.legend(loc="lower right")
     for k, (C, T, step, xl) in enumerate([(C5, 12, 5, "minutes before"), (C1, 24, 1, "hours before")]):
