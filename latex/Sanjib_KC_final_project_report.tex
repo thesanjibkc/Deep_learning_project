@@ -16,10 +16,8 @@
 \def\cvprPaperID{****}
 \def\httilde{\mbox{\tt\raisebox{-.5ex}{\symbol{126}}}}
 
-% Draft marker for anything not yet computed. Remove before submission.
-\newcommand{\tbd}[1]{\textcolor{red}{[TBD: #1]}}
 
-\graphicspath{{figures/}{../figures/explore/}{../figures/results/}}
+\graphicspath{{figures/}{../figures/paper/}}
 
 \ifcvprfinal\pagestyle{empty}\fi
 \begin{document}
@@ -27,7 +25,7 @@
 %%%%%%%%% TITLE
 \title{Physics-Guided Temporal Transformer for Aviation\\Effective Dose-Rate Estimation}
 
-\author{Sanjib K C \quad PantherID: 00XXXXXXX\\
+\author{Sanjib K C \quad PantherID: 002775811\\
 {\tt\small skc3@gsu.edu}
 }
 
@@ -36,34 +34,28 @@
 
 %%%%%%%%% ABSTRACT
 \begin{abstract}
-Aircrew and passengers are exposed to cosmic radiation at cruising altitude,
-but the dose rate is measured on only a few flights, so operational estimates
-rely on physics models. Using 92,415 in-flight measurements, we show that the
-physics model NAIRAS V3 underpredicts 89\% of observations above
-15~$\mu$Sv/h and cannot tell from its own estimate which flights will receive
-high doses. We train a Transformer to learn a correction to NAIRAS from the
-aircraft's location and the recent history of solar and geomagnetic
-conditions, compare it with static machine-learning and convolutional
-baselines, and use attention and attribution to identify which conditions and
-time lags drive the correction. Over 18 runs on unseen flights, temporal
-networks reduce error by 9.5\% relative to NAIRAS, significantly more than a
-network without history and on par with the best static model, and a
-high-dose-weighted Transformer reduces error above 15~$\mu$Sv/h by 19\% at no
-overall cost.
+Aircrew are exposed to cosmic radiation at cruising altitude, but the dose
+rate is measured on few flights, so estimates rely on physics models. On
+92,415 in-flight measurements, the physics model NAIRAS V3 underpredicts 89\%
+of dose rates above 15~$\mu$Sv/h and cannot tell from its own estimate which
+flights will receive high doses. We train neural networks, including a
+Transformer, to learn a correction to NAIRAS from the aircraft's position and
+the recent history of solar and geomagnetic conditions. On unseen flights,
+temporal networks reduce the error of NAIRAS by up to 9.3\%, significantly
+more than a network without history, and weighting high-dose errors reduces the
+error above 15~$\mu$Sv/h by 19\% at no overall cost.
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
 \section{Introduction}
 \label{sec:intro}
 
-Galactic cosmic rays and solar energetic particles produce showers of
-secondary radiation in the atmosphere, and the resulting dose rate at
-cruising altitude is many times higher than at the ground. Aircrew are
-therefore among the most radiation-exposed occupational groups. Direct
-measurements, such as those from the Automated Radiation Measurements for
-Aerospace Safety (ARMAS) system~\cite{tobiska2016}, exist for only a small
-number of flights, so routine dose estimates depend on physics-based models
-such as NAIRAS~\cite{mertens2013}.
+Cosmic-ray showers make the dose rate at cruising altitude many times higher
+than at the ground, so aircrew are among the most radiation-exposed
+occupational groups. Direct measurements, such as those of the Automated
+Radiation Measurements for Aerospace Safety (ARMAS) system~\cite{tobiska2016},
+exist for few flights, so routine estimates rely on physics-based models such
+as NAIRAS~\cite{mertens2013}.
 
 The high-dose regime is where these models fail and where accuracy matters
 most. On the ARMAS dataset~\cite{sadykov2026}, NAIRAS V3 has an RMSE of
@@ -71,7 +63,7 @@ most. On the ARMAS dataset~\cite{sadykov2026}, NAIRAS V3 has an RMSE of
 15~$\mu$Sv/h, and it underpredicts 89\% of those observations
 (Sec.~\ref{sec:eda}). The failure is not a simple offset: grouped by its own
 estimate, NAIRAS is nearly unbiased, yet its errors in each group range widely
-in both directions (Fig.~\ref{fig:nairas}d). In other words, NAIRAS cannot
+in both directions (Fig.~\ref{fig:nairas}b). In other words, NAIRAS cannot
 identify \emph{which} flights will receive high doses.
 
 Static machine-learning corrections~\cite{kc2025} reduce this error using the
@@ -86,15 +78,12 @@ We address these gaps with a physics-guided temporal model. A Transformer
 encoder~\cite{vaswani2017} reads the recent history of 35 solar,
 interplanetary, and geomagnetic variables and predicts the \emph{residual}
 between ARMAS and NAIRAS, so that the physics model supplies the baseline and
-the network supplies what it misses. Our contributions are:
-(i) an exploratory analysis showing where and why NAIRAS fails;
-(ii) a residual Transformer compared with NAIRAS, a prior static model, and
-MLP, Flat MLP, CNN--MLP, and TCN baselines;
-(iii) a comparison of a 1-hour (5-minute cadence) and a 24-hour (hourly
-cadence) history to test how far back space weather matters;
-(iv) an imbalance-aware loss for the rare high-dose regime; and
-(v) attention and permutation-importance analysis of what the correction
-uses, including lead--lag effects.
+the network supplies what it misses. We contribute (i) an exploratory
+analysis of where NAIRAS fails; (ii) a residual Transformer compared with
+NAIRAS, a prior static model, and MLP, Flat MLP, CNN--MLP, and TCN
+baselines, with 1-hour and 24-hour histories; (iii) an imbalance-aware loss
+for the rare high doses; and (iv) an analysis of which inputs and histories
+the correction uses and what causes the remaining error.
 
 \section{Related Work}
 \label{sec:related}
@@ -111,8 +100,7 @@ learn its error rather than replacing it.
 Camporeale~\cite{camporeale2019} reviews machine-learning nowcasting in space
 weather and highlights scarce data and rare extreme events. Sadykov
 \etal~\cite{sadykov2026} released machine-learning-ready datasets that align
-ARMAS and NAIRAS with flight position, neutron-monitor counts, solar-wind
-parameters, particle fluxes, and geomagnetic indices. Our earlier
+ARMAS and NAIRAS with space-weather conditions. Our earlier
 work~\cite{kc2025} used the current-time conditions to correct NAIRAS; it
 serves as our static baseline. Wang \etal~\cite{wang2024} train a neural
 network to reproduce simulated dose rapidly, whereas we correct a physics model
@@ -126,16 +114,15 @@ Theory-guided data science~\cite{karpatne2017} and later
 reviews~\cite{willard2022,reichstein2019} argue that combining physical models
 with learning improves generalization over either alone. Physics-informed
 networks~\cite{raissi2019,karniadakis2021} place physics in the loss; we
-instead place it in the output, learning the residual of NAIRAS, and test this
-against direct prediction with otherwise identical networks.
+place it in the output, learning the residual of NAIRAS, and test this against
+direct prediction with identical networks and inputs.
 
 \textbf{Temporal models and imbalanced targets.}
 Temporal convolutional networks~\cite{bai2018} and
 Transformers~\cite{vaswani2017,lim2021} model multivariate sequences, and
-attention weights can expose which time steps a prediction uses, although
-whether attention explains a prediction is debated~\cite{jain2019,wiegreffe2019},
-so we check it against permutation importance and treat it as a description
-of the model rather than a cause. For
+attention weights expose which time steps a prediction uses; since whether
+attention explains a prediction is debated~\cite{jain2019,wiegreffe2019}, we
+check it against permutation importance. For
 skewed targets, Yang \etal~\cite{yang2021} show that standard losses
 underperform in sparse target regions, and Ribeiro and
 Moniz~\cite{ribeiro2020} propose metrics for extreme values; we use a threshold-weighted Huber
@@ -148,256 +135,275 @@ operationally.
 \subsection{Dataset}
 \label{sec:data}
 The dataset~\cite{sadykov2026} contains 92,415 ARMAS observations from
-2013--2023, split by flight into three partitions of 29--32 thousand
-observations each, so that no flight contributes to more than one; all three
-have 16--17\% of observations above 15~$\mu$Sv/h and a similar NAIRAS error
-(Appendix Table~\ref{tab:partitions}). Each observation has the measured
-effective dose rate $A$ (the target), the NAIRAS V3 estimate $N$, and 43
-inputs (Appendix Table~\ref{tab:features}): 8 \emph{static} inputs for
-position, altitude, and geomagnetic shielding, including the cutoff rigidity
-$R_c$ (low $R_c$ means weak shielding), and 35 \emph{temporal} solar,
-interplanetary, and geomagnetic variables, each given as 12 five-minute steps
-(1-hour history) or 24 hourly steps (24-hour history) ending at the
-observation time. The aircraft identifier is never an input.
+2013--2023, split by flight into three partitions P1--P3 of 29--32 thousand
+observations, so that no flight appears in more than one; each has
+16--17\% of observations above 15~$\mu$Sv/h (Appendix
+Table~\ref{tab:partitions}). Each observation has the measured effective dose
+rate $A$ (the target), the NAIRAS V3 estimate $N$, and 43 inputs (Appendix
+Table~\ref{tab:features}): 8 \emph{static} inputs for position, altitude, and
+geomagnetic shielding, including the cutoff rigidity $R_c$ (low $R_c$ means
+weak shielding), and 35 \emph{temporal} solar, interplanetary, and
+geomagnetic variables, each given as 12 five-minute steps (1-hour history)
+or 24 hourly steps (24-hour history) ending at the observation time.
 
 \subsection{Exploratory Analysis: Where NAIRAS Fails}
 \label{sec:eda}
-Fig.~\ref{fig:nairas}a plots NAIRAS against ARMAS. Above 15~$\mu$Sv/h the
-cloud is nearly flat: the measured dose reaches 40~$\mu$Sv/h while NAIRAS
-stays near 10--15~$\mu$Sv/h. Grouping the error $r=A-N$ by the measured dose
-gives a median that grows to $+17$~$\mu$Sv/h (Fig.~\ref{fig:nairas}c), but
-grouping by the NAIRAS estimate gives a median near zero with an
-interquartile range of about 5~$\mu$Sv/h (Fig.~\ref{fig:nairas}d). NAIRAS is
-thus nearly unbiased for a given estimate but cannot tell high-dose flights
-from ordinary ones; the missing information must come from other inputs.
+Fig.~\ref{fig:nairas}a plots NAIRAS against ARMAS. Above 15~$\mu$Sv/h, which
+holds for 16.5\% of observations, the cloud is nearly flat: the measured dose
+reaches 40~$\mu$Sv/h while NAIRAS stays near 10--15~$\mu$Sv/h. Grouped by the
+measured dose, the median error $A-N$ grows to $+17$~$\mu$Sv/h; grouped by
+the NAIRAS estimate, it stays near zero with an interquartile range of about
+5~$\mu$Sv/h (Fig.~\ref{fig:nairas}b). NAIRAS is thus nearly unbiased for a
+given estimate but cannot tell high-dose flights from ordinary ones, so the
+missing information must come from other inputs.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{e01_where_nairas_fails.png}
-\caption{NAIRAS V3 against ARMAS for all 92,415 observations.
-(a) NAIRAS versus measured dose; the dashed line is perfect agreement.
-(b) Distribution of the measured dose; 16.5\% exceeds 15~$\mu$Sv/h.
-(c, d) Error $A-N$ grouped in 2~$\mu$Sv/h bins of the measured dose (c) and of
-the NAIRAS estimate (d); lines are medians and bands span the 25th--75th
-percentiles. NAIRAS is nearly unbiased for a given estimate (d) but misses the
-highest measured doses (a, c).}
+\includegraphics[width=\linewidth]{nairas.pdf}
+\caption{NAIRAS V3 against ARMAS for all 92,415 observations. (a) NAIRAS
+estimate $N$ versus measured dose $A$; color, observations per cell (log
+scale); dashed, perfect agreement; dotted, the 15~$\mu$Sv/h threshold.
+(b) Median NAIRAS error $A-N$ in 2~$\mu$Sv/h bins of the measured dose
+(orange) and of the NAIRAS estimate (blue), with 25th--75th percentile bands:
+NAIRAS is nearly unbiased for a given estimate but misses the highest doses.}
 \label{fig:nairas}
 \end{figure}
 
-Three further findings shape the method. \emph{Inputs interact:} above
-15~$\mu$Sv/h fall 36\% of observations with $R_c<1$~GV but none with
-$R_c>10$~GV, and flights near Hawaii cruise highest (median 13.6~km) yet
-record the lowest dose because shielding there is strong; positive and
-negative NAIRAS errors are interleaved in the same regions (Appendix
-Fig.~\ref{fig:map}), so location alone does not explain the error.
-\emph{Records repeat:} in 56\% of consecutive records the ARMAS value is
-unchanged, so a random row split would leak near-copies into the test set;
-we split by flight and expect a measurement noise floor.
-\emph{History carries delayed signal:} within one hour 16 of the 35 variables
-are constant, whereas over 24 hours the solar wind, Kp, and Dst change by one
-to two standard deviations, and Kp and ap are more correlated with the NAIRAS
-error about 15~h before the observation (Spearman $\rho\approx0.12$) than at
-it ($\rho\approx0.04$; Appendix Fig.~\ref{fig:temporal}). Finally, no flight
-was exposed to solar energetic particles (Appendix~\ref{app:eda}), so the
-models cover galactic-cosmic-ray conditions only.
+Three further findings shape the method. \emph{Inputs interact:} 36\% of
+observations with $R_c<1$~GV exceed 15~$\mu$Sv/h but none with $R_c>10$~GV
+(Appendix Fig.~\ref{fig:map}). \emph{Records repeat:} 56\% of consecutive
+ARMAS values are unchanged, so we split by flight.
+\emph{History carries delayed signal:} Kp and ap correlate more with the
+NAIRAS error about 15~h before the observation (Spearman $\rho\approx0.12$)
+than at it ($\rho\approx0.04$; Appendix Fig.~\ref{fig:temporal}). No
+flight met solar energetic particles (Appendix~\ref{app:eda}).
 
 \subsection{Physics-Guided Residual Formulation}
-Let $X_i\in\mathbb{R}^{T\times35}$ be the environmental history ($T=12$ or
-24), $s_i\in\mathbb{R}^{8}$ the static inputs, and $N_i$ the NAIRAS
-estimate. The residual model learns the NAIRAS error and reconstructs the
-dose as
+Let $X_i\in\mathbb{R}^{T\times35}$ be the history of observation $i$ ($T=12$
+or 24), $s_i\in\mathbb{R}^{8}$ its static inputs, and $N_i$ the NAIRAS
+estimate. Instead of predicting the dose, a residual model predicts the
+NAIRAS error and adds it back,
 \begin{equation}
 r_i = A_i - N_i, \qquad
-\hat{A}_i = N_i + f_\theta(X_i, s_i, N_i),
+\hat{A}_i = N_i + f_\theta(X_i, s_i),
 \label{eq:residual}
 \end{equation}
-where $f_\theta$ is a network with parameters $\theta$. Direct models predict
-$A_i$ without $N_i$.
+where $f_\theta$ is a network with parameters $\theta$. NAIRAS is not an
+input to $f_\theta$: the physics model supplies only the baseline, and the
+network learns what NAIRAS misses from position and space weather. A
+\emph{direct} model with the same network and the same inputs predicts $A_i$
+itself, so the two differ only in the target, which isolates whether starting
+from physics helps.
 
-\subsection{Temporal Transformer}
-Each time step is one token: its 35 standardized values (X-ray and particle
-fluxes log-transformed first) are projected to $d=16$ dimensions and given a
-learned position embedding. Self-attention lets every step weigh every other,
+\subsection{Networks}
+Every temporal network except the Flat MLP has two branches. A \emph{current-time branch} maps $s_i$
+through one 32-unit layer, and a \emph{history branch} summarizes
+$X_i$; the two outputs are concatenated and a 64-unit output layer predicts
+the standardized target. The history branches differ in how they read time:
+
+\textbf{Temporal Transformer.} Each time step is a token: its 35
+standardized values (X-ray and particle fluxes log-transformed first) are
+projected to $d=16$ dimensions and given a learned position embedding. A
+learned summary token is prepended, and two pre-normalized encoder
+blocks~\cite{vaswani2017} with four heads let every token attend to every
+other,
 \begin{equation}
 \mathrm{Attn}(Q,K,V)=\mathrm{softmax}\!\left(QK^\top/\sqrt{d}\right)V,
 \label{eq:attention}
 \end{equation}
-where $Q$, $K$, and $V$ are learned linear projections of the tokens. A
-learned summary token is prepended, two pre-normalized encoder blocks with
-four heads apply Eq.~\eqref{eq:attention}, and the summary token's output is
-concatenated with an embedding of $s_i$ and $N_i$ before a small output
-network predicts $r_i$ (8,993 parameters in total).
+where $Q$, $K$, and $V$ are learned linear projections of the tokens. The
+summary token's output is the history summary, and its attention weights
+(Eq.~\eqref{eq:attention}) show
+which hours it used. Parameter counts are in Table~\ref{tab:results}.
 
-\subsection{Baselines}
-The baselines form a ladder in which each model adds one idea: NAIRAS V3;
-the static models of~\cite{kc2025}, whose best model, XGBoost, is quoted from
-that study; a current-time MLP (14,081 parameters); a Flat MLP
-that receives the whole history as one vector (56,513); a CNN--MLP with two
-convolutions over time (7,025); a causal dilated TCN~\cite{bai2018}
-(10,369); and direct (non-residual) versions of the MLP and Transformer.
-All other models learn the residual of Eq.~\eqref{eq:residual}.
+\textbf{TCN.} A temporal convolutional network~\cite{bai2018} stacks
+residual blocks of causal convolutions (kernel 3, dilations 1, 2, 4, 8), so
+its last step sees the whole window and serves as the summary.
+
+\textbf{CNN--MLP.} The hybrid MLP--CNN applies two convolutions (kernel 3)
+over time and summarizes the history by the mean and the last step of the
+feature maps.
+
+\textbf{Flat MLP.} A control that receives the same history flattened into
+one vector ($24\times35=840$ values) plus the current-time inputs, with no
+notion of time order; comparing it with the temporal networks isolates the
+value of reading the history with temporal structure.
+
+\textbf{MLP and static models.} A current-time MLP (hidden layers of 128 and
+64 units) sees only the 43 inputs at the observation time and measures what
+the history adds. The static XGBoost of~\cite{kc2025} is quoted.
+
+\begin{table*}[t]
+\caption{Test RMSE ($\mu$Sv/h), mean $\pm$ standard deviation over 18 runs (six assignments
+$\times$ three seeds), overall and for $A>15$, with 1-hour and 24-hour histories. All networks
+except ``direct'' learn the NAIRAS residual; none receives NAIRAS as input. XGBoost is quoted
+from~\cite{kc2025}. Parameters and mean training time per run (Apple M5 laptop GPU), 1-hour / 24-hour.}
+\label{tab:results}\vspace{3pt}
+\centering\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{lcccccc}\toprule
+ & \multicolumn{2}{c}{1-hour history} & \multicolumn{2}{c}{24-hour history} & & \\ \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Model & All & $A>15$ & All & $A>15$ & Parameters & Time (s) \\ \midrule
+NAIRAS V3 (physics) & \multicolumn{4}{c}{$4.044\pm0.040$ \quad $6.845\pm0.277$} & -- & -- \\
+XGBoost, static~\cite{kc2025} & \multicolumn{4}{c}{$3.671\pm0.061$ \quad --} & -- & -- \\
+MLP, direct (no history) & \multicolumn{4}{c}{$3.842\pm0.096$ \quad $6.627\pm0.203$} & 13,953 & 2.5 \\
+MLP (no history) & \multicolumn{4}{c}{$3.740\pm0.044$ \quad $6.325\pm0.194$} & 13,953 & 2.0 \\ \midrule
+Flat MLP & $3.874\pm0.032$ & $6.619\pm0.161$ & $3.909\pm0.057$ & $6.708\pm0.234$ & 29,569 / 56,449 & 2.7 / 1.8 \\
+CNN--MLP & $3.686\pm0.028$ & $6.144\pm0.230$ & $\mathbf{3.667}\pm0.043$ & $6.136\pm0.266$ & 6,993 & 3.1 / 3.3 \\
+TCN & $3.678\pm0.042$ & $6.115\pm0.168$ & $3.679\pm0.049$ & $6.168\pm0.187$ & 8,769 / 10,337 & 6.3 / 8.4 \\
+Transformer, direct & $3.683\pm0.034$ & $6.268\pm0.218$ & $3.712\pm0.054$ & $6.417\pm0.230$ & 8,769 / 8,961 & 19.2 / 27.5 \\
+Transformer & $3.688\pm0.041$ & $6.284\pm0.150$ & $3.683\pm0.050$ & $6.325\pm0.190$ & 8,769 / 8,961 & 21.5 / 28.8 \\
+Transformer, $w=4$ & $3.788\pm0.080$ & $\mathbf{5.551}\pm0.246$ & $3.773\pm0.092$ & $5.696\pm0.249$ & 8,769 / 8,961 & 21.7 / 34.4 \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \subsection{Training Objective}
-All networks minimize a weighted Huber loss~\cite{huber1964},
+The target $y_i$ is the residual $r_i$ (or $A_i$ for direct models),
+standardized with the training-partition mean and standard deviation. The
+high-dose variant minimizes a weighted Huber loss~\cite{huber1964},
 \begin{equation}
 \mathcal{L}(\theta) = \frac{1}{n}\sum_{i=1}^{n} w_i\,
 \ell_\delta\!\left(y_i - \hat{y}_i\right), \qquad
 w_i = \begin{cases} w, & A_i > 15,\\ 1, & \text{otherwise,}\end{cases}
 \label{eq:huber}
 \end{equation}
-where $\ell_\delta$ is the Huber function and $y_i$ the standardized target.
-Standard models use $w=1$ and a squared loss; the high-dose variant uses
-$w=4$. We use AdamW (learning rate $10^{-3}$, $5\times10^{-4}$ for
-Transformers), weight decay 0.01, dropout 0.3, batch size 512, and early
-stopping on validation RMSE, all chosen on one train--validation assignment
-(larger first-pass models overfit within 2--7 epochs).
+where $\ell_\delta$ is the Huber function with $\delta=1$, quadratic for
+small errors and linear for large ones; we use $w=4$. All other models
+minimize the mean squared error. We train with AdamW (learning rate
+$10^{-3}$, $5\times10^{-4}$ for Transformers), weight decay 0.01, dropout
+0.3, and batch size 512, and stop early after 10 epochs without validation improvement; these
+settings were chosen on one train--validation assignment.
+
+\subsection{Evaluation and Analysis Methods}
+\label{sec:protocol}
+\textbf{Protocol.} The three partitions rotate through the training,
+validation, and test roles (six assignments); every model is trained on each
+with three seeds, and we report the test RMSE over these 18 runs, overall and
+for $A>15$~$\mu$Sv/h. Preprocessing is fitted on training data only.
+
+\textbf{Significance.} To compare two models we average each model's three
+seeds, resample whole test flights 1,000 times, and recompute the RMSE
+difference; its 2.5th and 97.5th percentiles, averaged over the six
+assignments, give a 95\% interval.
+
+\textbf{What the correction uses.} \emph{Permutation importance} shuffles
+one input group across test observations and reports the rise in RMSE.
+To separate a variable's past from its present we \emph{flatten} its history,
+replacing the past steps with the current value, and we also \emph{swap} its
+past steps with those of a random other observation while keeping its
+current value. We also track the summary token's attention during training.
+
+\textbf{What causes the remaining error.} For a grouping of the test
+observations, such as by aircraft, year, altitude band, shielding band,
+storm level, or flight, we compute the share of error variance it explains,
+$\eta^2=\sum_g n_g(\bar{e}_g-\bar{e})^2/\sum_i(e_i-\bar{e})^2$, for the
+NAIRAS error and for the error left after the model. Randomly reassigning
+aircraft labels across flights gives the chance level.
+
+Code to reproduce all results:
+\url{https://github.com/thesanjibkc/Deep_learning_project/tree/final-project}.
 
 \section{Experiments and Results}
 \label{sec:experiments}
 
-\subsection{Protocol}
-Preprocessing is fitted on the training partition, models are selected on
-the validation partition, and the test partition is evaluated once. Every model is trained on all six train--validation--test
-assignments of the three partitions with three seeds, and we report the mean
-and standard deviation of the test RMSE over these 18 runs, overall and for
-$A>15$~$\mu$Sv/h, always against NAIRAS on the same observations. Code to reproduce all
-results:
-\url{https://github.com/thesanjibkc/Deep_learning_project/tree/final-project}.
-
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.9\linewidth]{R4_best_vs_nairas.png}
-\caption{NAIRAS V3 and the best models against ARMAS on unseen flights; each
-observation is predicted by the three-seed ensemble of the assignment whose
-test partition contains it. (a--c) Predicted versus measured dose for NAIRAS,
-the best overall model (TCN, 24-hour history), and the best high-dose model
-(Transformer, 1-hour history, $w=4$); both are residual models, shown as the
-reconstructed dose $N+f_\theta$ of Eq.~\eqref{eq:residual}. Dashed: perfect
-agreement; dotted: 15~$\mu$Sv/h. (d) Median error $A-\hat{A}$ by measured dose, with
-25th--75th percentile bands.}
+\includegraphics[width=0.88\linewidth]{best.pdf}
+\caption{NAIRAS V3 and the best models against ARMAS on unseen flights
+(three-seed ensembles). (a--c) Predicted versus measured dose for NAIRAS,
+the best overall model (CNN--MLP, 24-hour history), and the best high-dose model
+(Transformer, 1-hour history, $w=4$), both residual models shown as
+$\hat{A}=N+f_\theta$ (Eq.~\eqref{eq:residual}); color, observations per
+cell; dashed, perfect agreement; dotted, 15~$\mu$Sv/h. (d) Median error
+$A-\hat{A}$ by measured dose, with 25th--75th percentile bands.}
 \label{fig:best}
 \end{figure*}
 
-\begin{table}[t]
-\caption{Test RMSE ($\mu$Sv/h, lower is better), mean $\pm$ standard
-deviation over 18 runs (six train--validation--test assignments of P1--P3
-$\times$ three seeds), for all observations and the high-dose subset
-$A>15$. Gain is the reduction relative to NAIRAS V3, overall / high dose.
-All networks except ``direct'' learn the NAIRAS residual. XGBoost is quoted
-from~\cite{kc2025} (static data; high-dose error not reported).}
-\label{tab:results}\vspace{3pt}
-\centering\small
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{lccc}\toprule
-Model & All & $A>15$ & Gain (\%) \\ \midrule
-NAIRAS V3 & $4.044\pm0.040$ & $6.845\pm0.277$ & -- \\
-XGBoost, static~\cite{kc2025} & $3.671\pm0.061$ & -- & 9.3 / -- \\ \midrule
-MLP, direct & $3.842\pm0.096$ & $6.627\pm0.203$ & 5.0 / 3.2 \\
-MLP & $3.737\pm0.032$ & $6.311\pm0.168$ & 7.6 / 7.8 \\ \midrule
-Flat MLP, 24\,h & $3.906\pm0.070$ & $6.731\pm0.264$ & 3.4 / 1.7 \\
-CNN--MLP, 24\,h & $3.661\pm0.043$ & $6.212\pm0.261$ & 9.5 / 9.2 \\
-TCN, 24\,h & $\mathbf{3.659}\pm0.029$ & $6.173\pm0.193$ & 9.5 / 9.8 \\
-Transformer, direct, 24\,h & $3.712\pm0.054$ & $6.417\pm0.230$ & 8.2 / 6.3 \\
-Transformer, 24\,h & $3.667\pm0.034$ & $6.309\pm0.148$ & 9.3 / 7.8 \\
-Transformer, 1\,h & $3.663\pm0.039$ & $6.261\pm0.125$ & 9.4 / 8.5 \\
-Transformer, 1\,h, $w=4$ & $3.762\pm0.080$ & $\mathbf{5.563}\pm0.233$ & 7.0 / 18.7 \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 \begin{table}[t]
-\caption{Ablations as paired differences in test RMSE ($\mu$Sv/h; negative
-means the first model is better), from a bootstrap that resamples whole
-flights within each assignment (1,000 draws), using seed-ensembled
-predictions and averaging over the six assignments. Bold marks 95\%
-intervals that exclude zero.}
+\caption{Ablations: paired differences in test RMSE ($\mu$Sv/h; negative
+means the first model is better) from the flight bootstrap of
+Sec.~\ref{sec:protocol}. Bold: the 95\% interval excludes zero.}
 \label{tab:ablation}\vspace{3pt}
 \centering\small
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{lcc}\toprule
 Comparison (what changes) & All & $A>15$ \\ \midrule
-Residual vs direct MLP (physics baseline) & $\mathbf{-0.07}$ & $\mathbf{-0.30}$ \\
-Transformer 24\,h vs MLP (history) & $\mathbf{-0.07}$ & $0.00$ \\
-TCN 24\,h vs MLP (history) & $\mathbf{-0.07}$ & $\mathbf{-0.14}$ \\
-Transformer vs Flat MLP, 24\,h (structure) & $\mathbf{-0.24}$ & $\mathbf{-0.43}$ \\
-Transformer 24\,h vs 1\,h (window) & $+0.01$ & $+0.05$ \\
-Weighted vs unweighted Transformer, 24\,h & $\mathbf{+0.07}$ & $\mathbf{-0.67}$ \\
+Residual vs direct MLP (target only) & $\mathbf{-0.07}$ & $\mathbf{-0.29}$ \\
+Residual vs direct Transformer, 24\,h & $-0.03$ & $-0.09$ \\
+CNN--MLP 24\,h vs MLP (history) & $\mathbf{-0.06}$ & $\mathbf{-0.18}$ \\
+Transformer 24\,h vs MLP (history) & $\mathbf{-0.06}$ & $0.00$ \\
+Transformer vs Flat MLP, 24\,h (structure) & $\mathbf{-0.25}$ & $\mathbf{-0.40}$ \\
+Transformer 24\,h vs 1\,h (window) & $0.00$ & $+0.04$ \\
+Weighted vs unweighted Transformer, 24\,h & $\mathbf{+0.08}$ & $\mathbf{-0.64}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Main Results and Ablations}
 Table~\ref{tab:results} reports test errors and Table~\ref{tab:ablation} the
-paired ablations. All networks beat NAIRAS, and learning the correction beats
-learning the dose directly for both the MLP and the Transformer. With the
-24-hour history, the TCN, CNN--MLP, and Transformer reach
-3.66--3.67~$\mu$Sv/h, a 9.5\% reduction from NAIRAS and significantly better
-than the current-time MLP (difference $-0.07$, 95\% interval
-$[-0.10,-0.04]$, better in all six assignments). This matches the static XGBoost
-of~\cite{kc2025} (3.671), which used its own protocol, so we claim no
-difference. The Flat MLP, which sees the same history as one vector, is
-significantly worse than every structured temporal model: \emph{how} the
-history is read matters more than having it. The 1-hour and 24-hour
-histories give the same average error for every architecture (Transformer $+0.01$, interval $[-0.01,0.03]$).
+paired comparisons. All networks beat NAIRAS. With identical inputs, learning
+the correction beats learning the dose for the MLP ($-0.07$, 95\% interval
+$[-0.11,-0.04]$; $-0.29$ above 15~$\mu$Sv/h) and, just short of
+significance, for the 24-hour Transformer ($-0.03$, $[-0.05,0.00]$); with a
+1-hour history the two tie. With 24 hours the CNN--MLP,
+TCN, and Transformer reach 3.67--3.68~$\mu$Sv/h, about 9\% below NAIRAS and
+significantly better than the current-time MLP (CNN--MLP $-0.06$,
+$[-0.09,-0.03]$, better in all six assignments). The best, the CNN--MLP
+(3.667), matches the static XGBoost of~\cite{kc2025} (3.671), which used its
+own protocol, so we claim no difference. The Flat MLP, which sees the same
+history without time order, is significantly worse than every temporal
+network ($-0.25$ for the Transformer): \emph{how} the history is read matters
+more than having it. The 1-hour and 24-hour histories give the same error
+($0.00$, $[-0.02,0.02]$), and all temporal networks need only 7--10
+thousand parameters and seconds of training (learning curves in Appendix Fig.~\ref{fig:curves}).
 
-\textbf{High doses.} Unweighted networks gain only 8--10\% above
-15~$\mu$Sv/h. Weighting high-dose errors four times lowers the high-dose
-RMSE to 5.56 (1-hour) and 5.66 (24-hour), a 19\% reduction from NAIRAS. The
-seed-ensembled weighted Transformer matches the current-time MLP overall
-($+0.001$, interval $[-0.04,0.05]$) while lowering high-dose RMSE by
-0.78~$\mu$Sv/h (interval $[-0.89,-0.67]$, all six assignments).
-Fig.~\ref{fig:best} shows why the gain is partial: above 15~$\mu$Sv/h NAIRAS
-underpredicts 89\% of observations (median error $+4.8$~$\mu$Sv/h), the TCN
-85\% ($+3.7$), and the weighted Transformer 73\% ($+2.5$).
+
+
+\textbf{High doses.} Unweighted networks gain only 8--11\% above
+15~$\mu$Sv/h. The weighted loss of Eq.~\eqref{eq:huber} lowers the high-dose
+RMSE to 5.55 (1-hour) and 5.70 (24-hour), 19\% and 17\% below NAIRAS, and the
+1-hour weighted Transformer matches the current-time MLP overall ($+0.01$,
+$[-0.03,0.05]$) while lowering high-dose RMSE by 0.82~$\mu$Sv/h
+($[-0.92,-0.71]$). Fig.~\ref{fig:best} shows why the gain is partial: above
+15~$\mu$Sv/h NAIRAS underpredicts 89\% of observations (median error
+$+4.8$~$\mu$Sv/h), the CNN--MLP 85\% ($+3.7$), and the weighted Transformer
+73\% ($+2.5$).
 
 \subsection{Which Inputs and Whose History Matter}
 \label{sec:attention}
-\textbf{Feature importance.} Shuffling one input group across test
-observations (24-hour Transformer, six assignments) raises RMSE most for
-altitude ($+0.74$~$\mu$Sv/h), geomagnetic shielding ($+0.65$; $+1.08$ above
-15~$\mu$Sv/h), and neutron-monitor counts ($+0.32$); every other
-space-weather group adds at most $0.08$.
+For the 24-hour Transformer, shuffling raises RMSE most for altitude
+($+0.40$~$\mu$Sv/h), shielding ($+0.38$; $+0.50$ above 15~$\mu$Sv/h), and
+neutron monitors ($+0.22$); other groups add at most $0.04$ (Appendix
+Figs.~\ref{fig:residual}a,~\ref{fig:features}). Flattening all histories
+raises RMSE by $0.035$ in every assignment, over half of the gain from
+history; the solar wind contributes most ($+0.03$). Flattening the
+neutron-monitor history changes little, but swapping its past adds $0.21$:
+the model reads their \emph{level}, not their trend. The 1-hour model behaves
+alike (Figs.~\ref{fig:residual1h},~\ref{fig:features1h}); occlusion confirms both findings (Figs.~\ref{fig:occlusion},~\ref{fig:occlmodels}). Without any storm
+label, attention focused on the hours of a storm's Kp peak
+(Fig.~\ref{fig:attention}).
 
-\textbf{History.} To separate a variable's past from its present, we
-\emph{flatten} its history, replacing the 23 past hours by the current value.
-Flattening all 35 variables raises RMSE by $0.04$ (in all six assignments), more than half of the temporal models' gain over the current-time
-MLP. The solar-wind history contributes most ($+0.03$, all six), followed by
-energetic particles and Kp/ap/Dst ($+0.01$ each); flattening the
-neutron-monitor or solar-activity history changes RMSE by less than 0.005. Yet giving each
-observation the past hours of another observation while keeping its current
-values raises RMSE by $0.31$ for neutron monitors alone: the model reads the
-neutron-monitor \emph{level} from the whole window, not its trend.
-
-\textbf{Attention on a storm.} For a flight on 9 September 2017, the
-morning after a severe geomagnetic storm, attention learned, without any storm label, to
-concentrate 16--18~h before the flight, where Kp peaked at 8.3 (Appendix
-Fig.~\ref{fig:attention}). Attention shows what the model used, not a
-cause~\cite{jain2019,wiegreffe2019}: scaling the storm from 0\% to 150\%
-moved the predictions by at most 1.1~$\mu$Sv/h.
-
-\textbf{What remains.} After correction, shielding, altitude, and storm level
-each explain less than 1\% of the remaining error variance; 81\% lies within
-individual flights, from minute to minute, where the inputs barely change,
-and 4--7\% is associated with the aircraft (never an input; chance level 3\%).
+\textbf{What causes the remaining error.} The aircraft explains 15\% of the
+NAIRAS error variance and the year 9\%; after the correction, 5\% and 3\%,
+with altitude, shielding, and storm level under 1\%. Instead, 83\% lies
+within flights, from minute to minute (Appendix Fig.~\ref{fig:residual}b,c),
+and the aircraft share stays above chance (3\%) in five of six assignments,
+pointing to differences between instruments.
 
 \section{Conclusions}
 \label{sec:conclusions}
-We learned four things. First, the physics model is the right starting
-point: learning NAIRAS's residual was more accurate and three times more
-stable than learning the dose directly. Second, the correction is driven
-mainly by where the aircraft is (altitude and geomagnetic shielding) and by
-the cosmic-ray level seen by neutron monitors. Among the histories, only the
-solar wind's, and to a lesser degree the energetic-particle and geomagnetic
-indices', carry information beyond their current values; the
-neutron-monitor history serves as a level, not a trend. Third, history helps
-only when read with structure by a small model: a flat, larger network
-memorized, and a 24-hour window did not beat a 1-hour one on average.
-Fourth, the objective matters most for safety: weighting high-dose errors cut
-the error above 15~$\mu$Sv/h by 19\% relative to NAIRAS without hurting
-overall accuracy, yet every model still underpredicts the highest doses, and
-the remaining error is mostly within-flight measurement variability. Next steps are
-seed-ensemble uncertainty~\cite{lakshminarayanan2017}, per-instrument
-calibration, and pretraining on longer space-weather archives.
+We learned four things. First, starting from physics pays: with the same
+inputs, learning NAIRAS's residual was more accurate and twice as stable as
+learning the dose. Second, the correction is driven by altitude, shielding,
+and the neutron-monitor level; only the solar-wind history adds clearly
+beyond current values. Third, history helps only when read with temporal
+structure: the Flat MLP memorized, and 24 hours did not beat 1 hour. Fourth,
+weighting high doses cut their error by up to 19\% at no overall cost, yet all
+models still underpredict the highest doses. The remaining error is mostly
+within-flight variability plus an instrument effect, motivating
+per-instrument calibration and ensemble uncertainty~\cite{lakshminarayanan2017}.
 
 \clearpage
 \section*{Peer Evaluation}
@@ -425,8 +431,7 @@ Sanjib K C (myself) & 20 \\ \bottomrule
 Table~\ref{tab:features} lists the inputs and Table~\ref{tab:partitions} the
 flight-separated partitions used in Sec.~\ref{sec:data}.
 Fig.~\ref{fig:map} shows the flight tracks behind the interaction findings of
-Sec.~\ref{sec:eda}, and Fig.~\ref{fig:attention} the training dynamics and
-storm attention discussed in Sec.~\ref{sec:attention}.
+Sec.~\ref{sec:eda}.
 
 \textbf{Solar modulation.} Over the solar cycle, sunspot number and Oulu
 neutron-monitor counts are anticorrelated ($r=-0.76$ across flight-days), as
@@ -454,18 +459,197 @@ each variable. The strongest associations come from neutron-monitor counts
 ($|\rho|\approx0.17$) and are nearly constant across lags, whereas Kp and ap
 peak roughly 12--17~h before the observation.
 
-\begin{figure}[h]
+\textbf{Which variable, which hour, and whose history.}
+Fig.~\ref{fig:features} breaks the importance down further. Shuffling single
+variables (a) shows GPS and barometric altitude, geomagnetic latitude, and
+cutoff rigidity as the strongest, followed by the Newark neutron monitor;
+shuffling a single variable overstates inputs that have a close twin (the two
+altitudes), which the group shuffle of Fig.~\ref{fig:residual}a avoids.
+Shuffling any single hour (b) changes the error by less than
+0.002~$\mu$Sv/h because neighboring hours are redundant. Panel (c) separates
+the past from the present, as described in Sec.~\ref{sec:attention}.
+
+\textbf{The 1-hour models.} Figs.~\ref{fig:residual1h}
+and~\ref{fig:features1h} repeat both analyses for the 1-hour Transformer.
+The same inputs dominate, with shielding ($+0.46$) slightly ahead of altitude
+($+0.45$) and neutron monitors third ($+0.23$). Its 55-minute history barely
+matters when flattened ($+0.008$), because most variables hardly change within
+an hour, but swapping the neutron-monitor past still raises RMSE by $0.20$.
+After its correction 85\% of the remaining error variance lies within
+flights, and the aircraft explains 3\% (chance level 2\%).
+
+\textbf{Occlusion and learning curves.} Following our preliminary report, we
+also \emph{occlude} inputs: an input is replaced by its training mean (zero
+after standardization) and the change in test RMSE is recorded; positive values
+mean the model is worse without it. For the residual Transformer
+(Fig.~\ref{fig:occlusion}), GPS and barometric altitude, geomagnetic latitude,
+and cutoff rigidity matter most with both histories ($+0.71$, $+0.46$, $+0.19$,
+and $+0.08$~$\mu$Sv/h with 24 hours). Occluding a single time step changes the
+overall RMSE by less than 0.006~$\mu$Sv/h but raises the high-dose error at
+every step, and the variable-by-hour map shows the neutron monitors
+contributing at every hour, consistent with the model reading their level.
+Across models (Fig.~\ref{fig:occlmodels}), the MLP, CNN--MLP, TCN, and
+Transformer rely on the same inputs, whereas the Flat MLP relies on none
+strongly, and only the TCN depends on the last time step, which carries its
+summary. Fig.~\ref{fig:curves} shows the validation RMSE of every model per
+epoch on one assignment and the best epoch in all 18 runs: the 24-hour Flat
+MLP is best after one to three epochs and then overfits, while the
+Transformers improve for about a dozen epochs.
+
+\textbf{What the correction uses and what causes the remaining error.}
+Fig.~\ref{fig:residual} supports Sec.~\ref{sec:attention}: panel (a) is the
+permutation importance, and panels (b, c) show which groupings explain the
+NAIRAS error and the error left after the 24-hour Transformer's correction.
+Fig.~\ref{fig:attention} shows the training dynamics and the storm-flight
+attention.
+
+\begin{figure*}[p]
 \centering
-\includegraphics[width=\linewidth]{T1_training_evolution.png}
+\includegraphics[width=\linewidth]{map.pdf}
+\caption{Flight tracks of all 92,415 observations colored by (a) measured
+dose rate, (b) geomagnetic cutoff rigidity $R_c$ (low values mean weak
+magnetic shielding), and (c) NAIRAS error $A-N$ (red: NAIRAS too low). High
+doses concentrate where shielding is weak, but positive and negative NAIRAS
+errors are interleaved in the same regions, so the error depends on more than
+location.}
+\label{fig:map}
+\end{figure*}
+
+\begin{figure*}[p]
+\centering
+\includegraphics[width=\linewidth]{temporal.pdf}
+\caption{Information in the environmental history for all 92,415
+observations. (a) Median change of each variable inside its window (range
+divided by the variable's overall standard deviation) for the 1-hour,
+5-minute-cadence window (orange) and the 24-hour, hourly window (blue); zero
+means the history is flat. (b, c) Spearman correlation between the NAIRAS
+error $A-N$ and each variable at each lag, for the 1-hour (b) and 24-hour (c)
+histories; lag 0 is the observation time. Horizontal stripes mean the
+association does not depend on lag; Kp and ap peak roughly 12--17~h before
+the observation.}
+\label{fig:temporal}
+\end{figure*}
+
+\begin{figure*}[p]
+\centering
+\includegraphics[width=\linewidth]{residual.pdf}
+\caption{What the correction uses and what causes the remaining error, for
+the 24-hour residual Transformer (seed 42), averaged over the six
+train--validation--test assignments; error bars span the minimum and maximum
+over assignments. (a) Rise in test RMSE when one input group is shuffled
+across test observations (blue: current flight inputs; orange: space-weather
+histories). (b) Share of error variance $\eta^2$ explained by each grouping,
+for the NAIRAS error $A-N$ (gray) and the error after the model
+$A-\hat{A}$ (orange); the dotted line is the chance level for the aircraft
+grouping, obtained by randomly reassigning aircraft labels across flights.
+(c) Error variance split into within-flight, between-flight, and
+aircraft components (percent). After the correction, altitude, shielding, and
+storm level explain almost nothing, and 83\% of the remaining variance lies
+within flights.}
+\label{fig:residual}
+\end{figure*}
+
+\begin{figure*}[p]
+\centering
+\includegraphics[width=\linewidth]{features.pdf}
+\caption{Which variable, which hour, and whose history the 24-hour residual
+Transformer uses (seed 42, mean over the six assignments; error bars and bands
+span the minimum and maximum). (a) Rise in test RMSE when one variable is
+shuffled across test observations (all 24 hours together), for the 15 most
+important of the 43 inputs (blue: current flight inputs; orange:
+space-weather histories). (b) Rise in RMSE when one hour of all 35
+space-weather variables is shuffled, for all observations (blue) and for
+$A>15$~$\mu$Sv/h (orange). (c) Rise in RMSE when a group's 23 past hours are
+replaced by its current value (blue) or by the past hours of a random other
+observation while its current value is kept (orange). Flattening hurts most
+for the solar wind; swapping hurts most for the neutron monitors, whose level
+over the window, not their trend, is what the model reads.}
+\label{fig:features}
+\end{figure*}
+
+\begin{figure*}[p]
+\centering
+\includegraphics[width=\linewidth]{residual_1h.pdf}
+\caption{As Fig.~\ref{fig:residual}, for the 1-hour residual Transformer (seed 42, mean over the
+six assignments; error bars span the minimum and maximum). (a) Rise in test RMSE when one input
+group is shuffled. (b) Share of error variance explained by each grouping for the NAIRAS error
+(gray) and the error after the model (orange); dotted, chance level for the aircraft grouping.
+(c) Within-flight, between-flight, and aircraft components of the error variance (percent).}
+\label{fig:residual1h}
+\end{figure*}
+
+\begin{figure*}[p]
+\centering
+\includegraphics[width=\linewidth]{features_1h.pdf}
+\caption{As Fig.~\ref{fig:features}, for the 1-hour residual Transformer. (a) Rise in test RMSE
+when one variable is shuffled (15 most important of 43 inputs). (b) Rise in RMSE when one
+5-minute step of all 35 variables is shuffled, for all observations (blue) and $A>15$~$\mu$Sv/h
+(orange). (c) Rise in RMSE when a group's 11 past steps are replaced by its current value
+(blue) or swapped with another observation's past (orange).}
+\label{fig:features1h}
+\end{figure*}
+
+\begin{figure*}[p]
+\centering
+\includegraphics[width=\linewidth]{occlusion.pdf}
+\caption{Occlusion of the residual Transformer (seed 42, mean over the six assignments; bands span the
+minimum and maximum). An input is replaced by its training mean and the change in test RMSE is shown;
+positive means the model is worse without it. (a) Each variable over the whole window, for the 24-hour
+(blue) and 1-hour (orange) models. (b, c) Each time step (all 35 variables), for all observations
+(blue) and $A>15$~$\mu$Sv/h (orange). (d) One variable at one hour, 24-hour model, for the 12
+variables with the largest total effect; red, worse without it; blue, better.}
+\label{fig:occlusion}
+\end{figure*}
+
+\begin{figure*}[p]
+\centering
+\includegraphics[width=\linewidth]{occlusion_models.pdf}
+\caption{Occlusion for every residual network (seed 42, mean over the six assignments). (a) Change in
+test RMSE when one input is occluded, 24-hour models (the MLP sees only the current values), for the 14
+inputs with the largest effect. (b, c) Change when one time step is occluded, for the 24-hour and
+1-hour models. All networks except the Flat MLP rely on altitude and latitude; only the TCN depends
+strongly on the last time step.}
+\label{fig:occlmodels}
+\end{figure*}
+
+\begin{figure*}[p]
+\centering
+\includegraphics[width=\linewidth]{curves.pdf}
+\caption{Learning curves of all models. (a, b) Validation RMSE per epoch for one assignment (P1 train,
+P2 validation, seed 42) with the 1-hour and 24-hour histories; the models without history appear in
+both panels, dashed lines are direct models, and dots mark the epoch kept by early stopping. (c) Best
+epoch of all 18 runs per model (circles, 1-hour; squares, 24-hour; bars, medians).}
+\label{fig:curves}
+\end{figure*}
+
+\begin{figure*}[p]
+\centering
+\includegraphics[width=\linewidth]{training.pdf}
 \caption{Training dynamics with the 24-hour history (P1 train, P2
-validation, one seed). (a) Training (dashed) and validation (solid) RMSE:
-the Flat MLP memorizes while the Transformer improves until epoch 11.
-(b) Transformer attention over the 24 hours for the 9 September 2017 flight
-at every epoch. (c) Attention at the best epoch against Kp: the weight
-concentrates where Kp peaked at 8.3, 16--18~h before the flight. (d) Flat
-MLP first-layer weight share per hour, which stays uniform.}
+validation, one seed). (a) Training (dashed) and validation (solid) RMSE per
+epoch: the Flat MLP memorizes the training data while the Transformer's
+validation error improves until epoch 8 (dotted line). (b) Attention of the
+Transformer's summary token over the 24 hours before the 9 September 2017
+flight, at every epoch (dotted line: best epoch). (c) Attention at the best
+epoch (bars) with the Kp index (line): the weight concentrates where Kp peaked
+at 8.3, 16--18~h before the flight; the dashed line is uniform attention.
+(d) Share of the Flat MLP's first-layer weight assigned to each hour, which
+stays uniform.}
 \label{fig:attention}
-\end{figure}
+\end{figure*}
+
+\begin{figure*}[p]
+\centering
+\includegraphics[width=\linewidth]{solar.pdf}
+\caption{Solar cycle and dose, one point per flight-day. (a) Sunspot number.
+(b) Oulu neutron-monitor (NM) count rate, which moves opposite to solar
+activity. (c) Daily median ARMAS and NAIRAS dose for matched conditions
+($R_c<1$~GV, 10.5--12~km altitude; days with at least 10 observations).
+(d) Mean NAIRAS error per flight-day (orange: NAIRAS too low; blue: too
+high).}
+\label{fig:solar}
+\end{figure*}
+
 
 \begin{table}[h]
 \caption{Input features. Static features have one value per observation;
@@ -507,42 +691,5 @@ P3 & 29,294 & 4,947 (16.9\%) & 3.99 & 6.50 \\ \midrule
 All & 92,415 & 15,254 (16.5\%) & 4.05 & 6.86 \\ \bottomrule
 \end{tabular}
 \end{table}
-
-\begin{figure*}[p]
-\centering
-\includegraphics[width=0.8\linewidth]{e02_flight_map.png}
-\caption{Flight tracks of all observations colored by (a) measured dose rate,
-(b) geomagnetic cutoff rigidity $R_c$ (low values mean weak magnetic
-shielding), and (c) NAIRAS error $A-N$ (red: NAIRAS too low). High doses
-concentrate where shielding is weak, but positive and negative NAIRAS errors
-are interleaved in the same regions, so the error depends on more than
-location.}
-\label{fig:map}
-\end{figure*}
-
-\begin{figure*}[p]
-\centering
-\includegraphics[width=0.85\linewidth]{e03_solar_cycle.png}
-\caption{Solar cycle and dose, one point per flight-day. (a) Sunspot number.
-(b) Oulu neutron-monitor counts, which move opposite to solar activity.
-(c) Daily median ARMAS and NAIRAS for matched conditions ($R_c<1$~GV,
-10.5--12~km altitude). (d) Mean NAIRAS error per flight-day (red: NAIRAS too
-low; blue: too high).}
-\label{fig:solar}
-\end{figure*}
-
-\begin{figure*}[p]
-\centering
-\includegraphics[width=0.95\linewidth]{e04_temporal_information.png}
-\caption{Information in the environmental history for all 92,415
-observations. (a) Median change of each variable inside its window (range
-divided by the variable's overall standard deviation) for the 1-hour,
-5-minute-cadence history (orange) and the 24-hour, hourly history (blue);
-zero means the history is flat. (b, c) Spearman correlation between the
-NAIRAS error $A-N$ and each variable at each lag, where column 0 is the
-observation time. Horizontal stripes mean the association does not depend on
-lag; Kp and ap peak roughly 12--17~h before the observation.}
-\label{fig:temporal}
-\end{figure*}
 
 \end{document}
