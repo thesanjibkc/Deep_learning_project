@@ -1,11 +1,10 @@
 group,kind,d_all,d_high
-Altitude,flight (current),0.6761855284372965,0.8317972819010416
-"Geomagnetic shielding (Rc, L, geomag lat/lon)",flight (current),0.6168938477834066,0.947751522064209
-NAIRAS estimate (as input),flight (current),0.24380032221476236,-0.4506971041361491
-Neutron monitors,space weather (history),0.21418865521748862,0.12925227483113608
-"Position (lat, lon)",flight (current),0.09012413024902344,0.20620489120483398
-Energetic particles,space weather (history),0.04983997344970703,-0.007077852884928386
-Solar wind,space weather (history),0.019186655680338543,0.021495501200358074
-"Solar activity (sunspots, F10.7, polar field)",space weather (history),0.018763621648152668,0.012087504069010416
-"Geomagnetic indices (Kp, ap, Dst)",space weather (history),0.006749471028645833,0.04390112559000651
-Solar X-rays,space weather (history),0.005442698796590169,0.012747764587402344
+Altitude,flight (current),0.3750850359598796,0.41311120986938477
+"Geomagnetic shielding (Rc, L, geomag lat/lon)",flight (current),0.3220340410868327,0.3220329284667969
+Neutron monitors,space weather (history),0.21079381306966147,0.05512571334838867
+Energetic particles,space weather (history),0.03872052828470866,0.0012907981872558594
+"Position (lat, lon)",flight (current),0.029031117757161457,0.16135152180989584
+Solar X-rays,space weather (history),0.01372853914896647,0.005068302154541016
+"Solar activity (sunspots, F10.7, polar field)",space weather (history),-0.0051695505777994795,-0.07874123255411784
+Solar wind,space weather (history),-0.009939114252726236,0.04597552617390951
+"Geomagnetic indices (Kp, ap, Dst)",space weather (history),-0.01990485191345215,0.032338460286458336

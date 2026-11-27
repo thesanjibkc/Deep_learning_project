@@ -37,7 +37,7 @@ seq = d["temporal"].copy()
 logv = [i for i, n in enumerate(env) if n.startswith(("SXR", "Particles"))]
 seq[:, :, logv] = np.log10(np.clip(seq[:, :, logv], 1e-12, None))
 s_seq = Scaler().fit(seq[m["train"]])
-cur = np.concatenate([d["static"], N[:, None]], 1)
+cur = d["static"]                       # NAIRAS is not a network input
 s_cur = Scaler().fit(cur[m["train"]])
 y = A - N; mu, sd = y[m["train"]].mean(), y[m["train"]].std()
 

@@ -36,7 +36,7 @@ seq = d["temporal"].copy()
 logv = [i for i, n in enumerate(env) if n.startswith(("SXR", "Particles"))]
 seq[:, :, logv] = np.log10(np.clip(seq[:, :, logv], 1e-12, None))
 s_seq = Scaler().fit(seq[m["train"]])
-cur = np.concatenate([d["static"], N[:, None]], 1)
+cur = d["static"]                       # NAIRAS is not a network input
 s_cur = Scaler().fit(cur[m["train"]])
 y = A - N; mu, sd = y[m["train"]].mean(), y[m["train"]].std()
 
@@ -72,7 +72,7 @@ groups_t = {
     "Solar activity (sunspots, F10.7, polar field)": [e for e in env if e.startswith("Solar")],
 }
 groups_c = {"Position (lat, lon)": [0, 1], "Altitude": [2, 3],
-            "Geomagnetic shielding (Rc, L, geomag lat/lon)": [4, 5, 6, 7], "NAIRAS estimate (as input)": [8]}
+            "Geomagnetic shielding (Rc, L, geomag lat/lon)": [4, 5, 6, 7]}
 REPEATS = 3
 imp = []
 for g, names in groups_t.items():
