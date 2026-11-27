@@ -2,6 +2,7 @@
 
 Text-only, idempotent, keeps each run's formatting. Run after deck_update_results.py and deck_update_retrain.py.
   slide 1   title: temporal networks (the best overall model is the CNN-MLP, not the Transformer)
+  slide 9   layout: move the caption and Kp label off the Kp bars
   slide 12  weighted Transformer: matches the MLP overall (ensembles, +0.01 n.s.) but +0.08 vs unweighted Transformer
   slide 16  residual vs direct: clear for the MLP, narrow for the Transformer; Flat MLP overfit
 """
@@ -39,6 +40,13 @@ set_runs(shape(S(16), "TextBox 7"),
          "With the same inputs, learning NAIRAS's correction beat learning the dose: clearly for the MLP, narrowly for the Transformer.")
 set_runs(shape(S(16), "TextBox 10"), "Small, regularized temporal networks beat a no-history MLP; a flat, larger network overfit.")
 set_runs(shape(S(16), "TextBox 13"), "Weighting high doses cut their error by 19% vs NAIRAS while matching the MLP overall.")
+
+# slide 9 layout: caption and Kp label overlapped the Kp bars (bars span y 5.32-6.15 in)
+from pptx.util import Inches
+from pptx.enum.text import PP_ALIGN
+cap = shape(S(9), "TextBox 79"); cap.left, cap.top = Inches(0.75), Inches(6.52)
+kp = shape(S(9), "TextBox 82"); kp.left, kp.top, kp.width = Inches(2.30), Inches(6.20), Inches(1.20)
+set_runs(kp, "▲ Kp 8.3"); kp.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
 
 prs.save(DECK)
 print("patched", DECK)
