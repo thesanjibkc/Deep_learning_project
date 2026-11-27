@@ -4,7 +4,7 @@ Every observation is predicted once, by the 3-seed ensemble of the assignment wh
 partition contains it (rotations 123 -> P3, 231 -> P1, 312 -> P2), so no prediction comes
 from a model that saw that flight.
 
-Panels: (a) NAIRAS V3, (b) best overall model (TCN, 24 h), (c) best high-dose model
+Panels: (a) NAIRAS V3, (b) best overall model (CNN–MLP, 24 h), (c) best high-dose model
 (Transformer with high-dose weight, 1 h), each versus ARMAS; (d) median error A - prediction
 by bins of the measured dose, with 25th-75th percentile bands.
 
@@ -29,7 +29,7 @@ OUT = Path("figures/results"); OUT.mkdir(parents=True, exist_ok=True)
 ROTS = ["123", "231", "312"]; SEEDS = [42, 1, 2]
 
 d = load("1H"); A, N = d["A"], d["N"]
-MODELS = {"TCN, 24 h": ("results/temporal_final/1H", "TCN_residual"),
+MODELS = {"CNN–MLP, 24 h": ("results/temporal_final/1H", "CNN-MLP_residual"),
           "Transformer, 1 h, w = 4": ("results/temporal_final_weighted/5M", "Transformer_residual")}
 pred = {}
 for lab, (root, stem) in MODELS.items():
