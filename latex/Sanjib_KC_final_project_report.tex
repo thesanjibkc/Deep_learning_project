@@ -198,7 +198,8 @@ from physics helps.
 Every temporal network except the Flat MLP has two branches. A \emph{current-time branch} maps $s_i$
 through one 32-unit layer, and a \emph{history branch} summarizes
 $X_i$; the two outputs are concatenated and a 64-unit output layer predicts
-the standardized target. The history branches differ in how they read time:
+the standardized target. The history branches differ in how they read time;
+we detail the Transformer because its attention can be inspected:
 
 \textbf{Temporal Transformer.} Each time step is a token: its 35
 standardized values (X-ray and particle fluxes log-transformed first) are
@@ -210,10 +211,9 @@ other,
 \mathrm{Attn}(Q,K,V)=\mathrm{softmax}\!\left(QK^\top/\sqrt{d}\right)V,
 \label{eq:attention}
 \end{equation}
-where $Q$, $K$, and $V$ are learned linear projections of the tokens. The
-summary token's output is the history summary, and its attention weights
-(Eq.~\eqref{eq:attention}) show
-which hours it used.
+where $Q$, $K$, and $V$ are learned projections of the tokens. The summary
+token's output summarizes the history; its weights in
+Eq.~\eqref{eq:attention} show which hours it used.
 
 \textbf{TCN.} A temporal convolutional network~\cite{bai2018} stacks
 residual blocks of causal convolutions (kernel 3, dilations 1, 2, 4, 8), so
@@ -392,15 +392,15 @@ pointing to differences between instruments.
 
 \section{Conclusions}
 \label{sec:conclusions}
-We learned four things. First, starting from physics pays: with the same
+First, starting from physics pays: with the same
 inputs, the residual beat the dose as target, clearly for the MLP (half the
 spread) and narrowly for the Transformer. Second, the correction is driven by altitude, shielding,
-and the neutron-monitor level; only the solar-wind history adds clearly
+and the neutron-monitor level; only solar-wind history adds clearly
 beyond current values. Third, history helps only when read with temporal
-structure: the Flat MLP overfit (Fig.~\ref{fig:attention}a), and 24 hours
+structure: the Flat MLP overfit (Appendix Fig.~\ref{fig:attention}a), and 24 hours
 did not beat 1 hour. Fourth,
 weighting high doses cut their error by up to 19\% while matching the MLP
-overall, yet all models still underpredict the highest doses. The remaining error is mostly
+overall, yet all models still underpredict the highest doses. The remaining error is
 within-flight variability plus an instrument effect, motivating
 per-instrument calibration and ensemble uncertainty~\cite{lakshminarayanan2017}.
 
