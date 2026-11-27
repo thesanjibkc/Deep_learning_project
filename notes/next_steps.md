@@ -22,7 +22,7 @@ Read `CLAUDE.md` first (rules, pipeline, links). This file is the status and to-
    Print and rehearse (~2 min per slide).
 2. **Share the four pages** from each page's Share menu (tutorial, attention animation, Model Zoo, Dose Lab), otherwise the
    QR codes on slides 8, 9, 14 only work for you. Test one QR with a phone.
-3. **Verify five older references** on Google Scholar: Tobiska 2016, Mertens 2013, Copeland 2017 (CARI-7A), Vaswani 2017,
+3. ~~Verify five older references~~ Done 2026-11-27 (Crossref/publisher records): Tobiska 2016, Mertens 2013, Copeland 2017, Vaswani 2017,
    Huber 1964.
 4. Read the final PDF once end to end; submit by Dec 7.
 5. Optional: uncertainty bands from the 3-seed ensemble; a pure 1D-CNN baseline; email the ARMAS team about how effective
