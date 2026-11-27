@@ -111,6 +111,7 @@ for r in 123 132 213 231 312 321; do python3 src/explain_errors.py 1H $r 42; don
 for r in 123 132 213 231 312 321; do python3 src/history_importance.py 1H $r 42; done   # whose history matters (flatten / shuffle past only)
 python3 scripts/track_training.py      # epoch-by-epoch attention
 python3 src/plot_results.py results/temporal_final; python3 src/plot_tracking.py; python3 src/plot_explain.py
+python3 src/plot_best_vs_nairas.py        # NAIRAS vs best models against ARMAS (report Fig. 2)
 python3 src/export_web.py results/temporal_final; python3 poster/animation/build.py
 python3 scripts/export_model_zoo.py; python3 poster/zoo/build.py   # Flight Model Zoo (real model internals on one unseen flight)
 
