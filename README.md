@@ -7,14 +7,14 @@ position, geomagnetic shielding, and the recent history of solar and geomagnetic
 conditions, evaluated against in-flight ARMAS measurements.
 
 **Final report:** [`latex/Sanjib_KC_final_project_report.tex`](latex/Sanjib_KC_final_project_report.tex)
-(CVPR format; red `[TBD]` markers show unfinished parts)
+(CVPR format, 4 pages + peer evaluation + references + appendix; figures in `figures/paper/`)
 **Poster / slides:** [`poster/`](poster/)
 **Code (this branch):** https://github.com/thesanjibkc/Deep_learning_project/tree/final-project  
 **Learning notes:** [`LEARNING_LOG.md`](LEARNING_LOG.md)
 
 ---
 
-## Status (updated 2026-11-26)
+## Status (updated 2026-11-27)
 
 | Step | Status |
 |---|---|
@@ -24,34 +24,51 @@ conditions, evaluated against in-flight ARMAS measurements.
 | Temporal models (Flat MLP, CNN–MLP, TCN, Transformer, direct Transformer), 1 h and 24 h, 6 rotations × 3 seeds | ✅ |
 | High-dose weighted Transformer (Huber, w = 4) | ✅ |
 | Seed ensembles + paired flight-bootstrap significance | ✅ `results/final/` |
-| Permutation importance + remaining-error analysis (6 rotations) | ✅ `results/explain/` |
+| Importance, history flattening, per-variable importance, occlusion (all models), remaining-error analysis, learning curves, for 1 h **and** 24 h | ✅ `results/explain/` |
 | Epoch-by-epoch attention tracking | ✅ `results/tracking/` |
-| Interactive page, training animation, Flight Model Zoo | ✅ `poster/web/`, `poster/animation/`, `poster/zoo/` |
-| Final report | 🟡 complete draft; check page limit on Overleaf |
-| Slides (12–16) | 🟡 slide 3 done |
+| Interactive pages: tutorial, training animation, Flight Model Zoo, Flight Dose Lab | ✅ `poster/models_explained/`, `poster/animation/`, `poster/zoo/`, `poster/web/` |
+| Final report | ✅ 4 pages, compiled locally |
+| Slides (16) | ✅ |
+
+**Design:** NAIRAS is never a network input. Residual models predict the correction
+`r = A − N` from position, shielding and space weather only, and the prediction is `N + r`; direct
+models get the same inputs and predict `A`. (Until 2026-11-26 the residual models also received
+NAIRAS as an input; all models were retrained without it. The old results are kept locally in
+`results_with_nairas_input/`, which is gitignored.)
 
 ## Final results (test set, mean ± std over 18 runs = 6 rotations × 3 seeds)
 
-| Model | RMSE all (µSv/h) | RMSE A > 15 | Gain vs NAIRAS (all / high) |
-|---|---|---|---|
-| NAIRAS V3 | 4.044 ± 0.040 | 6.845 ± 0.277 | — |
-| XGBoost (K C et al. 2025, cited, static data) | 3.671 ± 0.061 | not reported | 9.3% |
-| MLP, direct | 3.842 ± 0.096 | 6.627 ± 0.203 | 5.0% / 3.2% |
-| MLP (no history) | 3.737 ± 0.032 | 6.311 ± 0.168 | 7.6% / 7.8% |
-| Flat MLP, 24 h | 3.906 ± 0.070 | 6.731 ± 0.264 | 3.4% / 1.7% |
-| CNN–MLP, 24 h | 3.661 ± 0.043 | 6.212 ± 0.261 | 9.5% / 9.2% |
-| **TCN, 24 h** | **3.659 ± 0.029** | 6.173 ± 0.193 | 9.5% / 9.8% |
-| Transformer, direct, 24 h | 3.712 ± 0.054 | 6.417 ± 0.230 | 8.2% / 6.3% |
-| Transformer, 24 h | 3.667 ± 0.034 | 6.309 ± 0.148 | 9.3% / 7.8% |
-| Transformer, 1 h | 3.663 ± 0.039 | 6.261 ± 0.125 | 9.4% / 8.5% |
-| **Transformer, 1 h, high-dose weight 4** | 3.762 ± 0.080 | **5.563 ± 0.233** | 7.0% / **18.7%** |
+Training time is the mean per run on an Apple M5 laptop GPU (PyTorch 2.8, MPS), including early
+stopping and an evaluation of all observations after every epoch.
 
-Seed ensembles (average of 3 seeds) lower every model by about 0.03 (Transformer 1 h: 3.628).
-Significance (`results/final/significance.csv`): temporal models beat the no-history MLP overall
-in all 6 rotations; residual beats direct; 1 h vs 24 h shows no difference; the weighted
-Transformer matches the MLP overall while cutting high-dose RMSE by 0.78 µSv/h.
+| Model | History | RMSE all (µSv/h) | RMSE A > 15 | Gain vs NAIRAS (all / high) | Parameters | Train time (s) |
+|---|---|---|---|---|---|---|
+| NAIRAS V3 | – | 4.044 ± 0.040 | 6.845 ± 0.277 | — | – | – |
+| XGBoost (K C et al. 2025, cited, static data) | – | 3.671 ± 0.061 | not reported | 9.2% | – | – |
+| MLP, direct | none | 3.842 ± 0.096 | 6.627 ± 0.203 | 5.0% / 3.2% | 13,953 | 2.5 |
+| MLP | none | 3.740 ± 0.044 | 6.325 ± 0.194 | 7.5% / 7.6% | 13,953 | 2.0 |
+| Flat MLP | 1 h | 3.874 ± 0.032 | 6.619 ± 0.161 | 4.2% / 3.3% | 29,569 | 2.7 |
+| Flat MLP | 24 h | 3.909 ± 0.057 | 6.708 ± 0.234 | 3.3% / 2.0% | 56,449 | 1.8 |
+| CNN–MLP | 1 h | 3.686 ± 0.028 | 6.144 ± 0.230 | 8.9% / 10.2% | 6,993 | 3.1 |
+| **CNN–MLP** | **24 h** | **3.667 ± 0.043** | 6.136 ± 0.266 | **9.3%** / 10.4% | 6,993 | 3.3 |
+| TCN | 1 h | 3.678 ± 0.042 | 6.115 ± 0.168 | 9.1% / 10.7% | 8,769 | 6.3 |
+| TCN | 24 h | 3.679 ± 0.049 | 6.168 ± 0.187 | 9.0% / 9.9% | 10,337 | 8.4 |
+| Transformer, direct | 1 h | 3.683 ± 0.034 | 6.268 ± 0.218 | 8.9% / 8.4% | 8,769 | 19.2 |
+| Transformer, direct | 24 h | 3.712 ± 0.054 | 6.417 ± 0.230 | 8.2% / 6.3% | 8,961 | 27.5 |
+| Transformer | 1 h | 3.688 ± 0.041 | 6.284 ± 0.150 | 8.8% / 8.2% | 8,769 | 21.5 |
+| Transformer | 24 h | 3.683 ± 0.050 | 6.325 ± 0.190 | 8.9% / 7.6% | 8,961 | 28.8 |
+| **Transformer, high-dose weight 4** | **1 h** | 3.788 ± 0.080 | **5.551 ± 0.246** | 6.3% / **18.9%** | 8,769 | 21.7 |
+| Transformer, high-dose weight 4 | 24 h | 3.773 ± 0.092 | 5.696 ± 0.249 | 6.7% / 16.8% | 8,961 | 34.4 |
 
-**Interactive:** [Flight Dose Lab](https://claude.ai/artifact/X3saE5EHSytJkidqedoo52) ·
+Seed ensembles (average of 3 seeds) lower every model by about 0.03 (Transformer 24 h: 3.643).
+Significance (`results/final/significance.csv`, paired flight bootstrap, 95% intervals):
+residual beats direct for the MLP (−0.07 overall, −0.29 above 15); CNN–MLP, TCN and Transformer
+with 24 h beat the no-history MLP (−0.06); the Flat MLP is worse than every temporal model
+(−0.25 vs Transformer); 1 h vs 24 h shows no difference; the 1-hour weighted Transformer matches
+the MLP overall while cutting high-dose RMSE by 0.82 µSv/h.
+
+**Interactive:** [How the Six Models Differ (tutorial)](https://claude.ai/artifact/H5NE4f65zQJuUqFh45hCSn) ·
+[Flight Dose Lab](https://claude.ai/artifact/X3saE5EHSytJkidqedoo52) ·
 [Watching Attention Learn](https://claude.ai/artifact/SoxLwXhTsnEeFPNjU8EjjC) ·
 [Flight Model Zoo](https://claude.ai/artifact/XTzA1TvvKFi7pJ45pAKZ9B) (runs the trained networks live; private links, share from each page).
 Next steps and open items: [`notes/next_steps.md`](notes/next_steps.md).
@@ -106,12 +123,17 @@ python3 src/summarize.py results/temporal/1H
 # final temporal runs, tuning, statistics, explanations, figures
 bash scripts/tune_temporal.sh          # validation-only tuning (rotation 123)
 bash scripts/run_final.sh              # 6 rotations x 3 seeds x 2 cadences (+ weighted)
+bash scripts/run_analysis.sh           # everything after training: stats, analyses (1 h and 24 h), figures, web pages
 python3 src/final_stats.py             # seed ensembles + flight bootstrap
 for r in 123 132 213 231 312 321; do python3 src/explain_errors.py 1H $r 42; done
 for r in 123 132 213 231 312 321; do python3 src/history_importance.py 1H $r 42; done   # whose history matters (flatten / shuffle past only)
+for c in 1H 5M; do for r in 123 132 213 231 312 321; do python3 src/variable_importance.py $c $r 42; python3 src/occlusion.py $c $r 42; python3 src/occlusion_all.py $c $r 42; done; done   # per-variable importance, occlusion (Transformer, all models)
 python3 scripts/track_training.py      # epoch-by-epoch attention
 python3 src/plot_results.py results/temporal_final; python3 src/plot_tracking.py; python3 src/plot_explain.py
 python3 src/plot_best_vs_nairas.py        # NAIRAS vs best models against ARMAS (report Fig. 2)
+python3 src/paper_figures.py              # all report figures, CVPR paper style -> figures/paper/*.pdf
+python3 poster/deck_update_results.py     # sync slides 12, 15, 16 with the report
+python3 poster/deck_update_retrain.py     # slides 8, 9, 11-14, 16 after retraining without the NAIRAS input
 python3 src/export_web.py results/temporal_final; python3 poster/animation/build.py
 python3 scripts/export_model_zoo.py; python3 poster/zoo/build.py   # Flight Model Zoo (real model internals on one unseen flight)
 
