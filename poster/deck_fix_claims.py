@@ -1,8 +1,9 @@
 """Patch claim wording in the Team 5 deck to match the final report (2026-11-27).
 
-Text-only, idempotent, keeps each run's formatting. Run after deck_update_results.py and deck_update_retrain.py.
+Text and layout, idempotent, keeps each run's formatting. Run after deck_update_results.py and deck_update_retrain.py.
   slide 1   title: temporal networks (the best overall model is the CNN-MLP, not the Transformer)
   slide 9   layout: move the caption and Kp label off the Kp bars
+  layout    slides 8, 11, 14, 15, 16: remove text/figure overlaps (see 'overlap scan' below); slide 14 'overfits'
   slide 12  weighted Transformer: matches the MLP overall (ensembles, +0.01 n.s.) but +0.08 vs unweighted Transformer
   slide 16  residual vs direct: clear for the MLP, narrow for the Transformer; Flat MLP overfit
 """
@@ -47,6 +48,23 @@ from pptx.enum.text import PP_ALIGN
 cap = shape(S(9), "TextBox 79"); cap.left, cap.top = Inches(0.75), Inches(6.52)
 kp = shape(S(9), "TextBox 82"); kp.left, kp.top, kp.width = Inches(2.30), Inches(6.20), Inches(1.20)
 set_runs(kp, "▲ Kp 8.3"); kp.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+
+# layout fixes found by an overlap scan (positions in inches; idempotent)
+def place(slide, name, x, y, w=None, h=None):
+    sh = shape(S(slide), name); sh.left, sh.top = Inches(x), Inches(y)
+    if w is not None: sh.width = Inches(w)
+    if h is not None: sh.height = Inches(h)
+place(8, "TextBox 10", 0.72, 6.16, h=0.28)             # NAIRAS card: "physics model" collided with "no training"
+place(8, "TextBox 11", 0.72, 6.40, h=0.28)
+place(11, "Chart 5", 0.50, 1.55, h=5.15)              # chart bottom ran under its caption
+place(14, "Picture 5", 0.79, 1.50, 7.42, 5.18)        # opaque figure covered its caption (aspect kept)
+place(14, "TextBox 9", 0.60, 6.70)
+place(15, "Picture 5", 2.65, 1.50, 8.04, 3.78)        # opaque figure covered the tops of the three cards (aspect kept)
+for card, text in (("Rounded Rectangle 11", "TextBox 13"), ("Rounded Rectangle 14", "TextBox 16")):
+    place(16, card, shape(S(16), card).left / 914400, 3.60, h=1.38)   # cards end above the "Code on GitHub" label
+    place(16, text, shape(S(16), text).left / 914400, 4.32, h=0.62)
+place(14, "TextBox 6", 8.85, 1.80, h=3.40)            # side text box frame ended under the two QR images
+set_runs(shape(S(14), "TextBox 6"), "Flat MLP: ", "even weights; overfits after epoch 4.", para=2)
 
 prs.save(DECK)
 print("patched", DECK)
