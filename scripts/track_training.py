@@ -29,7 +29,7 @@ seq = d["temporal"].copy()
 logv = [i for i, n in enumerate(d["env"]) if n.startswith(("SXR", "Particles"))]
 seq[:, :, logv] = np.log10(np.clip(seq[:, :, logv], 1e-12, None))
 Xs = torch.tensor(Scaler().fit(seq[m["train"]])(seq), dtype=torch.float32, device=dev)
-cur = np.concatenate([d["static"], N[:, None]], 1)
+cur = d["static"]                       # NAIRAS is not a network input
 Xc = torch.tensor(Scaler().fit(cur[m["train"]])(cur), dtype=torch.float32, device=dev)
 y = A - N; mu, sd = y[m["train"]].mean(), y[m["train"]].std()
 yt = torch.tensor((y - mu) / sd, dtype=torch.float32, device=dev)

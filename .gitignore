@@ -41,3 +41,7 @@ results/**/pred_*.npy
 
 # Local tool settings
 .claude/
+results_with_nairas_input/
+
+# Local run logs (regenerable)
+results/logs/

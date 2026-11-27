@@ -1,6 +1,8 @@
 """Train the temporal neural networks on the 5M (1-hour) or 1H (24-hour) history.
 
-Runs (all predict the correction r = A - N, prediction = N + r, unless "direct"):
+Runs (all predict the correction r = A - N, prediction = N + r, unless "direct").
+NAIRAS is never a network input: residual and direct models get identical inputs and differ
+only in the target.
   FlatMLP (residual), CNN-MLP (residual), TCN (residual),
   Transformer (residual), Transformer (direct)
 
@@ -69,7 +71,7 @@ record("NAIRAS V3", N)
 def run(name, arch, residual):
     torch.manual_seed(args.seed); np.random.seed(args.seed)
     cur0 = d["current"] if args.curfull else d["static"]
-    cur = np.concatenate([cur0, N[:, None]], 1) if residual else cur0
+    cur = cur0                                   # NAIRAS is not an input (only the residual baseline)
     y = A - N if residual else A
     base = N if residual else np.zeros_like(N)
     s_cur = Scaler().fit(cur[m["train"]])

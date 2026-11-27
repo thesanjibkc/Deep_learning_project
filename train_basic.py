@@ -3,7 +3,7 @@
 Models
   NAIRAS V3            physics model, no training
   MLP (direct)         A  ~ 43 features
-  MLP (residual)       r  ~ 43 features + NAIRAS,  prediction = N + r
+  MLP (residual)       r  ~ 43 features,  prediction = N + r   (NAIRAS is not an input)
 
 Usage:  python3 train_basic.py --rotation 123     (train P1, validate P2, test P3)
 """
@@ -39,7 +39,7 @@ d = load("5M")                         # current-time features are identical in 
 m = split(d, tr, va, te)
 A, N = d["A"], d["N"]
 X_direct = d["current"]
-X_resid = np.concatenate([d["current"], N[:, None]], axis=1)
+X_resid = d["current"]                 # same inputs as direct; only the target differs
 
 rows, histories = [], {}
 
