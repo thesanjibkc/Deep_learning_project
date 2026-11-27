@@ -268,10 +268,11 @@ w_i = \begin{cases} w, & A_i > 15,\\ 1, & \text{otherwise,}\end{cases}
 \end{equation}
 where $\ell_\delta$ is the Huber function with $\delta=1$, quadratic for
 small errors and linear for large ones; we use $w=4$. All other models
-minimize the mean squared error. We train with AdamW (learning rate
-$10^{-3}$, $5\times10^{-4}$ for Transformers), weight decay 0.01, dropout
-0.3, and batch size 512, and stop early after 10 epochs without validation improvement; these
-settings were chosen on one train--validation assignment.
+minimize the mean squared error. We use AdamW (learning rate $10^{-3}$,
+$5\times10^{-4}$ for Transformers), batches of 512, and early stopping on
+validation RMSE; temporal networks use weight decay 0.01, dropout 0.3,
+patience 10 and gradient clipping at norm 1, the MLP $10^{-4}$, 0.1 and
+15, all chosen on one train--validation assignment.
 
 \subsection{Evaluation and Analysis Methods}
 \label{sec:protocol}
