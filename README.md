@@ -108,6 +108,7 @@ bash scripts/tune_temporal.sh          # validation-only tuning (rotation 123)
 bash scripts/run_final.sh              # 6 rotations x 3 seeds x 2 cadences (+ weighted)
 python3 src/final_stats.py             # seed ensembles + flight bootstrap
 for r in 123 132 213 231 312 321; do python3 src/explain_errors.py 1H $r 42; done
+for r in 123 132 213 231 312 321; do python3 src/history_importance.py 1H $r 42; done   # whose history matters (flatten / shuffle past only)
 python3 scripts/track_training.py      # epoch-by-epoch attention
 python3 src/plot_results.py results/temporal_final; python3 src/plot_tracking.py; python3 src/plot_explain.py
 python3 src/export_web.py results/temporal_final; python3 poster/animation/build.py
