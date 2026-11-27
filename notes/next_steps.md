@@ -14,6 +14,8 @@ Read `CLAUDE.md` first (rules, pipeline, links). This file is the status and to-
   PantherID in the author line, compiled locally (`latex/Sanjib_KC_final_project_report.pdf`)
 - Slides patched (8, 9, 11–16), four interactive pages republished, README updated
 - Everything committed and pushed to `origin/final-project` (main untouched)
+- Report review (rated ~8/10) → overclaims fixed in report, slides 1/12/16, README, Dose Lab: title now "Temporal Networks";
+  weighting "matches the MLP overall" (+0.08 vs unweighted Transformer); residual beats direct clearly for MLP, narrowly for Transformer
 
 ## To do (in this order)
 1. **Open the slides in PowerPoint** and check slides 8–16 (they were patched with python-pptx; Claude cannot render them).

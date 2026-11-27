@@ -80,12 +80,12 @@ S(11).notes_slide.notes_text_frame.text = (
 set_runs(shape(S(12), "TextBox 8"), "5.55")
 set_runs(shape(S(12), "TextBox 9"), "µSv/h high-dose error, down from 6.85 for NAIRAS (−19%)")
 set_runs(shape(S(12), "TextBox 14"), "+0.01")
-set_runs(shape(S(12), "TextBox 15"), "change in overall error vs the MLP: no cost (not significant)")
+set_runs(shape(S(12), "TextBox 15"), "change in overall error vs the MLP (not significant)")
 S(12).notes_slide.notes_text_frame.text = (
     "Left three panels: NAIRAS, the best overall model (CNN–MLP, 24 h) and the weighted Transformer against the measurement, "
     "all on unseen flights. Right: the error grows with the true dose for every model. Weighting high-dose errors four times "
-    "(weighted Huber) cuts the high-dose error 19% vs NAIRAS (−0.82 vs the MLP, 95% CI −0.92 to −0.71) at no overall cost, "
-    "yet all models still underpredict the highest doses. XGBoost 2025 did not report high-dose error.")
+    "(weighted Huber) cuts the high-dose error 19% vs NAIRAS (−0.82 vs the MLP, 95% CI −0.92 to −0.71) while matching the MLP overall "
+    "(+0.01, n.s.; +0.08 vs the unweighted Transformer), yet all models still underpredict the highest doses. XGBoost 2025 did not report high-dose error.")
 
 # ---- slide 13: ablation table (text only; formatting kept)
 tbl = next(sh for sh in S(13).shapes if sh.has_table).table
@@ -107,8 +107,8 @@ pic = s14.shapes.add_picture(str(ROOT / "figures/results/T1_training_evolution.p
 set_runs(shape(s14, "TextBox 6"), f"By epoch {best}: ", "it peaks 16–18 h before the flight, exactly where Kp hit 8.3.", para=1)
 
 # ---- slide 16: conclusion wording
-set_runs(shape(S(16), "TextBox 7"), "With the same inputs, learning NAIRAS's correction beat learning the dose: more accurate and twice as stable.")
-set_runs(shape(S(16), "TextBox 13"), "Weighting high doses cut their error by 19% vs NAIRAS at no overall cost.")
+set_runs(shape(S(16), "TextBox 7"), "With the same inputs, learning NAIRAS's correction beat learning the dose: clearly for the MLP, narrowly for the Transformer.")
+set_runs(shape(S(16), "TextBox 13"), "Weighting high doses cut their error by 19% vs NAIRAS while matching the MLP overall.")
 
 prs.save(DECK)
 print("patched", DECK, "best epoch", best)

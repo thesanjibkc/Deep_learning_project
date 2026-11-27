@@ -76,7 +76,7 @@ s12.notes_slide.notes_text_frame.text = (
     "Left three panels: NAIRAS, the best overall model (CNN–MLP, 24 h) and the weighted Transformer against the "
     "measurement, all on unseen flights. Right: the error grows with the true dose for every model. "
     "Weighting high-dose errors four times (weighted Huber) cuts the high-dose error 19% vs NAIRAS "
-    "(-0.82 vs the MLP, 95% CI -0.92 to -0.71) at no overall cost, yet all models still underpredict the "
+    "(-0.82 vs the MLP, 95% CI -0.92 to -0.71) while matching the MLP overall, yet all models still underpredict the "
     "highest doses. XGBoost 2025 did not report high-dose error.")
 
 # ---- slide 15: six-split figure and cards

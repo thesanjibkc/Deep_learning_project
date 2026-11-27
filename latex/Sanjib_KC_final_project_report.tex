@@ -23,7 +23,7 @@
 \begin{document}
 
 %%%%%%%%% TITLE
-\title{Physics-Guided Temporal Transformer for Aviation\\Effective Dose-Rate Estimation}
+\title{Physics-Guided Temporal Networks for Aviation\\Effective Dose-Rate Estimation}
 
 \author{Sanjib K C \quad PantherID: 002775811\\
 {\tt\small skc3@gsu.edu}
@@ -43,7 +43,7 @@ Transformer, to learn a correction to NAIRAS from the aircraft's position and
 the recent history of solar and geomagnetic conditions. On unseen flights,
 temporal networks reduce the error of NAIRAS by up to 9.3\%, significantly
 more than a network without history, and weighting high-dose errors reduces the
-error above 15~$\mu$Sv/h by 19\% at no overall cost.
+error above 15~$\mu$Sv/h by 19\%, matching a no-history network overall.
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
@@ -58,7 +58,7 @@ exist for few flights, so routine estimates rely on physics-based models such
 as NAIRAS~\cite{mertens2013}.
 
 The high-dose regime is where these models fail and where accuracy matters
-most. On the ARMAS dataset~\cite{sadykov2026}, NAIRAS V3 has an RMSE of
+most. Over all ARMAS observations~\cite{sadykov2026}, NAIRAS V3 has an RMSE of
 4.05~$\mu$Sv/h overall but 6.86~$\mu$Sv/h when the measured dose exceeds
 15~$\mu$Sv/h, and it underpredicts 89\% of those observations
 (Sec.~\ref{sec:eda}). The failure is not a simple offset: grouped by its own
@@ -74,13 +74,13 @@ phase of the solar cycle, and short-lived disturbances such as geomagnetic
 storms. We hypothesize that the recent history of these conditions carries
 information about the dose that a single snapshot misses.
 
-We address these gaps with a physics-guided temporal model. A Transformer
-encoder~\cite{vaswani2017} reads the recent history of 35 solar,
+We address these gaps with physics-guided temporal networks. A temporal
+network~\cite{vaswani2017,bai2018} reads the recent history of 35 solar,
 interplanetary, and geomagnetic variables and predicts the \emph{residual}
 between ARMAS and NAIRAS, so that the physics model supplies the baseline and
 the network supplies what it misses. We contribute (i) an exploratory
-analysis of where NAIRAS fails; (ii) a residual Transformer compared with
-NAIRAS, a prior static model, and MLP, Flat MLP, CNN--MLP, and TCN
+analysis of where NAIRAS fails; (ii) residual Transformer, TCN, and CNN--MLP
+models compared with NAIRAS, a prior static model, and MLP and Flat MLP
 baselines, with 1-hour and 24-hour histories; (iii) an imbalance-aware loss
 for the rare high doses; and (iv) an analysis of which inputs and histories
 the correction uses and what causes the remaining error.
@@ -97,8 +97,8 @@ ARMAS~\cite{tobiska2016} have exposed. We keep NAIRAS V3 as the baseline and
 learn its error rather than replacing it.
 
 \textbf{Machine learning for space weather and aviation dose.}
-Camporeale~\cite{camporeale2019} reviews machine-learning nowcasting in space
-weather and highlights scarce data and rare extreme events. Sadykov
+Camporeale~\cite{camporeale2019} reviews machine learning in space weather,
+where data are scarce and extremes rare. Sadykov
 \etal~\cite{sadykov2026} released machine-learning-ready datasets that align
 ARMAS and NAIRAS with space-weather conditions. Our earlier
 work~\cite{kc2025} used the current-time conditions to correct NAIRAS; it
@@ -153,9 +153,8 @@ holds for 16.5\% of observations, the cloud is nearly flat: the measured dose
 reaches 40~$\mu$Sv/h while NAIRAS stays near 10--15~$\mu$Sv/h. Grouped by the
 measured dose, the median error $A-N$ grows to $+17$~$\mu$Sv/h; grouped by
 the NAIRAS estimate, it stays near zero with an interquartile range of about
-5~$\mu$Sv/h (Fig.~\ref{fig:nairas}b). NAIRAS is thus nearly unbiased for a
-given estimate but cannot tell high-dose flights from ordinary ones, so the
-missing information must come from other inputs.
+5~$\mu$Sv/h (Fig.~\ref{fig:nairas}b). NAIRAS thus cannot tell high-dose
+flights from ordinary ones; the missing information must come from other inputs.
 
 \begin{figure}[t]
 \centering
@@ -214,7 +213,7 @@ other,
 where $Q$, $K$, and $V$ are learned linear projections of the tokens. The
 summary token's output is the history summary, and its attention weights
 (Eq.~\eqref{eq:attention}) show
-which hours it used. Parameter counts are in Table~\ref{tab:results}.
+which hours it used.
 
 \textbf{TCN.} A temporal convolutional network~\cite{bai2018} stacks
 residual blocks of causal convolutions (kernel 3, dilations 1, 2, 4, 8), so
@@ -226,8 +225,7 @@ feature maps.
 
 \textbf{Flat MLP.} A control that receives the same history flattened into
 one vector ($24\times35=840$ values) plus the current-time inputs, with no
-notion of time order; comparing it with the temporal networks isolates the
-value of reading the history with temporal structure.
+notion of time order; it isolates the value of temporal structure.
 
 \textbf{MLP and static models.} A current-time MLP (hidden layers of 128 and
 64 units) sees only the 43 inputs at the observation time and measures what
@@ -357,16 +355,16 @@ history without time order, is significantly worse than every temporal
 network ($-0.25$ for the Transformer): \emph{how} the history is read matters
 more than having it. The 1-hour and 24-hour histories give the same error
 ($0.00$, $[-0.02,0.02]$), and all temporal networks need only 7--10
-thousand parameters and seconds of training (learning curves in Appendix Fig.~\ref{fig:curves}).
+thousand parameters and seconds of training (Appendix Fig.~\ref{fig:curves}).
 
 
 
 \textbf{High doses.} Unweighted networks gain only 8--11\% above
 15~$\mu$Sv/h. The weighted loss of Eq.~\eqref{eq:huber} lowers the high-dose
 RMSE to 5.55 (1-hour) and 5.70 (24-hour), 19\% and 17\% below NAIRAS, and the
-1-hour weighted Transformer matches the current-time MLP overall ($+0.01$,
-$[-0.03,0.05]$) while lowering high-dose RMSE by 0.82~$\mu$Sv/h
-($[-0.92,-0.71]$). Fig.~\ref{fig:best} shows why the gain is partial: above
+1-hour weighted Transformer matches the current-time MLP overall (ensembles,
+$+0.01$, $[-0.03,0.05]$) while lowering high-dose RMSE by
+0.82~$\mu$Sv/h ($[-0.92,-0.71]$), but costs $+0.08$ versus the unweighted one. Fig.~\ref{fig:best} shows why the gain is partial: above
 15~$\mu$Sv/h NAIRAS underpredicts 89\% of observations (median error
 $+4.8$~$\mu$Sv/h), the CNN--MLP 85\% ($+3.7$), and the weighted Transformer
 73\% ($+2.5$).
@@ -395,13 +393,14 @@ pointing to differences between instruments.
 \section{Conclusions}
 \label{sec:conclusions}
 We learned four things. First, starting from physics pays: with the same
-inputs, learning NAIRAS's residual was more accurate and twice as stable as
-learning the dose. Second, the correction is driven by altitude, shielding,
+inputs, the residual beat the dose as target, clearly for the MLP (half the
+spread) and narrowly for the Transformer. Second, the correction is driven by altitude, shielding,
 and the neutron-monitor level; only the solar-wind history adds clearly
 beyond current values. Third, history helps only when read with temporal
-structure: the Flat MLP memorized, and 24 hours did not beat 1 hour. Fourth,
-weighting high doses cut their error by up to 19\% at no overall cost, yet all
-models still underpredict the highest doses. The remaining error is mostly
+structure: the Flat MLP overfit (Fig.~\ref{fig:attention}a), and 24 hours
+did not beat 1 hour. Fourth,
+weighting high doses cut their error by up to 19\% while matching the MLP
+overall, yet all models still underpredict the highest doses. The remaining error is mostly
 within-flight variability plus an instrument effect, motivating
 per-instrument calibration and ensemble uncertainty~\cite{lakshminarayanan2017}.
 

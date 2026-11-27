@@ -1,4 +1,4 @@
-# Physics-Guided Temporal Transformer for Aviation Effective Dose-Rate Estimation
+# Physics-Guided Temporal Networks for Aviation Effective Dose-Rate Estimation
 
 CSC 8851 Deep Learning, Fall 2026 · Sanjib K C · Team 5
 
@@ -134,6 +134,7 @@ python3 src/plot_best_vs_nairas.py        # NAIRAS vs best models against ARMAS 
 python3 src/paper_figures.py              # all report figures, CVPR paper style -> figures/paper/*.pdf
 python3 poster/deck_update_results.py     # sync slides 12, 15, 16 with the report
 python3 poster/deck_update_retrain.py     # slides 8, 9, 11-14, 16 after retraining without the NAIRAS input
+python3 poster/deck_fix_claims.py         # slides 1, 12, 16: claim wording matched to the final report
 python3 src/export_web.py results/temporal_final; python3 poster/animation/build.py
 python3 scripts/export_model_zoo.py; python3 poster/zoo/build.py   # Flight Model Zoo (real model internals on one unseen flight)
 

@@ -38,7 +38,7 @@ Figures must look like a CVPR paper (no titles inside images; the caption explai
 for s in 42 1 2; do for r in 123 132 213 231 312 321; do python3 train_basic.py --rotation $r --seed $s; done; done
 bash scripts/run_final.sh          # temporal models, 1 h + 24 h, + high-dose weighted Transformer (~1 h on an M5 laptop)
 bash scripts/run_analysis.sh       # stats, importance, history flattening, occlusion, tracking, all figures, web exports
-python3 poster/deck_update_results.py && python3 poster/deck_update_retrain.py   # patch the slides in place
+python3 poster/deck_update_results.py && python3 poster/deck_update_retrain.py && python3 poster/deck_fix_claims.py   # patch the slides in place
 ```
 Key code: `src/data.py` (loading, splits, scaler), `src/models.py` (Flat MLP, CNN–MLP, TCN, Transformer),
 `train_basic.py` (MLPs), `train_temporal.py`, `src/final_stats.py` (seed ensembles + flight bootstrap),
@@ -47,7 +47,7 @@ variable × hour map), `src/occlusion_all.py` (all models), `scripts/track_train
 
 ## Slides (`poster/Team5_Sanjib_KC_slides.pptx`, 16 slides)
 Never rebuild with `poster/build_deck.py` (it overwrites hand edits and has old numbers). Patch instead:
-`poster/deck_qr.py`, `poster/deck_update_results.py`, `poster/deck_update_retrain.py` (idempotent).
+`poster/deck_qr.py`, `poster/deck_update_results.py`, `poster/deck_update_retrain.py`, `poster/deck_fix_claims.py` (idempotent).
 When changing text, keep each run's formatting: some text boxes have several runs (e.g. slide 8's equation).
 PowerPoint automation is blocked for Claude, so the user must view the slides; verify text with python-pptx.
 

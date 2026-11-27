@@ -300,7 +300,7 @@ function drawAtt(){
 /* ---------- Play 4 ---------- */
 function drawCards(){
   const C=[["Cutoff rigidity (Rc)","How strong Earth's magnetic shield is at a place","The minimum momentum per charge a cosmic ray needs to get through. Near 0 GV at the poles, above 10 GV near the equator."],
-    ["Residual learning","What does the network actually predict?","The correction r = ARMAS − NAIRAS. Final estimate = NAIRAS + r. NAIRAS is not an input. With the same inputs, it was more accurate and twice as stable as predicting ARMAS directly."],
+    ["Residual learning","What does the network actually predict?","The correction r = ARMAS − NAIRAS. Final estimate = NAIRAS + r. NAIRAS is not an input. With the same inputs, it beat predicting ARMAS directly: clearly for the MLP, narrowly for the Transformer."],
     ["Token","What one input step is in our Transformer","The 35 space-weather readings at one moment. The 1-hour model sees 12 tokens, the 24-hour model 24."],
     ["Attention","How the model picks important moments","Each token scores every other (query · key), softmax turns scores into weights that sum to 1, and the model takes the weighted average."],
     ["Solar modulation","Why a quiet Sun means more dose","An active Sun's solar wind pushes galactic cosmic rays away. When the Sun is quiet, about 10% more reach Earth."],
